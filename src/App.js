@@ -7,6 +7,30 @@ import OptionScanner from './OptionScanner';
 export default function App() {
   const [tab, setTab] = useState('cc'); // cc, csp, scanner
 
+  // PWA install banner state
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  // PWA install prompt handling
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const installPWA = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    // We could react to 'accepted' or 'dismissed'
+    setShowInstallBanner(false);
+    setDeferredPrompt(null);
+  };
+
   // Simple global style for a clean app feel on mobile
   useEffect(() => {
     const s = document.createElement('style');
@@ -42,6 +66,15 @@ export default function App() {
       {tab === 'cc' && <CoveredCallPanel />}
       {tab === 'csp' && <CashSecuredPutPanel />}
       {tab === 'scanner' && <OptionScanner />}
+
+      {showInstallBanner && (
+        <div style={{ position: 'fixed', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#0b1', color: '#000', padding: '12px 16px', borderRadius: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 6px 20px rgba(0,0,0,0.3)' }}>
+            <span style={{ fontWeight: 600 }}>Install Options Desk</span>
+            <button onClick={installPWA} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#1fbe6e', color: '#fff', fontWeight: 600 }}>Install</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
