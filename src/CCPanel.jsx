@@ -1,0 +1,320 @@
+import { useState, useMemo } from 'react'
+import { calcCC, calcRequiredPremiumCC, fmtD, fmtPct } from './math'
+import { NumField, Card, KV, Sep, Badge, Lbl, ACC, GB, G } from './ui'
+import ScenarioTable from './ScenarioTable'
+import PayoffChart from './PayoffChart'
+
+function AssignedScenario({ label, price, premium, strike, stockPrice, isAssigned }) {
+  const pl = isAssigned ? (strike - stockPrice + premium) : premium
+  const isProfit = pl >= 0
+  
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between',
+      padding: '10px 12px',
+      background: isAssigned ? 'rgba(255,160,80,0.08)' : 'rgba(255,255,255,0.02)',
+      borderRadius: 6,
+      border: isAssigned ? '1px solid rgba(255,160,80,0.2)' : '1px solid rgba(255,255,255,0.05)'
+    }}>
+      <div>
+        <div style={{ fontSize: 11, color: isAssigned ? '#ffa050' : 'rgba(255,255,255,0.5)' }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 2 }}>
+          {fmtD(price)}
+        </div>
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
+          {isAssigned ? 'ASSIGNED' : 'Not assigned'}
+        </div>
+        <div style={{ 
+          fontSize: 14, 
+          fontWeight: 700, 
+          color: isProfit ? ACC : '#e05050',
+          marginTop: 2
+        }}>
+          {isProfit ? '+' : ''}{fmtD(pl)}/sh
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function CCPanel({ bp, state, setState }) {
+  const stockPrice = state?.stockPrice || ''
+  const strikePrice = state?.strikePrice || ''
+  const premium = state?.premium || ''
+  const dte = state?.dte || ''
+  const budget = state?.budget || ''
+  const desiredRoi = state?.desiredRoi || ''
+
+  const setStockPrice = (v) => setState(s => ({ ...s, stockPrice: v }))
+  const setStrikePrice = (v) => setState(s => ({ ...s, strikePrice: v }))
+  const setPremium = (v) => setState(s => ({ ...s, premium: v }))
+  const setDte = (v) => setState(s => ({ ...s, dte: v }))
+  const setBudget = (v) => setState(s => ({ ...s, budget: v }))
+  const setDesiredRoi = (v) => setState(s => ({ ...s, desiredRoi: v }))
+
+  const sp = parseFloat(stockPrice)
+  const k = parseFloat(strikePrice)
+  const p = (requiredPremium || premium) ? parseFloat(requiredPremium || premium) : null
+
+  const requiredPremium = useMemo(() => {
+    if (!stockPrice || !strikePrice || !desiredRoi) return null
+    return calcRequiredPremiumCC(stockPrice, strikePrice, desiredRoi)
+  }, [stockPrice, strikePrice, desiredRoi])
+
+  const effectivePremiumVal = requiredPremium || premium
+  const hasTarget = requiredPremium && desiredRoi
+
+  const result = useMemo(() => {
+    if (!stockPrice || !strikePrice || !effectivePremiumVal) return null
+    return calcCC({ stockPrice, strikePrice, premium: effectivePremiumVal, dte, budget })
+  }, [stockPrice, strikePrice, effectivePremiumVal, dte, budget])
+
+  const assignedScenarios = useMemo(() => {
+    if (!sp || !k || !p) return []
+    
+    return [
+      { label: 'Stock below strike', price: sp * 0.95, isAssigned: false },
+      { label: 'At strike (K)', price: k, isAssigned: true },
+      { label: 'Above strike +5%', price: k * 1.05, isAssigned: true },
+      { label: 'Above strike +10%', price: k * 1.10, isAssigned: true },
+      { label: 'Above strike +20%', price: k * 1.20, isAssigned: true },
+    ].map(s => ({
+      ...s,
+      pl: s.isAssigned ? (s.price - sp + p) : p,
+      roi: s.isAssigned ? ((s.price - sp + p) / (sp - p) * 100) : (p / sp * 100)
+    }))
+  }, [sp, k, p])
+
+  const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isDesktop ? '280px 1fr' : '1fr',
+      gap: isDesktop ? 28 : 16
+    }}>
+      <div>
+        <Card>
+          <Lbl style={{ marginBottom: 12, display: 'block', color: ACC, fontSize: 11 }}>Covered Call Strategy</Lbl>
+          
+          <NumField
+            label="Stock Price"
+            value={stockPrice}
+            onChange={setStockPrice}
+            pre="$"
+            step={0.01}
+            ph="100.00"
+            help="Enter the current market price of the stock you want to trade."
+          />
+          <NumField
+            label="Target Strike"
+            value={strikePrice}
+            onChange={setStrikePrice}
+            pre="$"
+            step={0.5}
+            ph="105.00"
+            help="The price at which you're willing to sell your shares if assigned. Usually set above current stock price."
+          />
+          <NumField
+            label="Desired ROI"
+            value={desiredRoi}
+            onChange={setDesiredRoi}
+            suf="%"
+            step={1}
+            ph="10"
+            note="Your target return %"
+            help="The return percentage you want to earn. The calculator will show what premium you need to collect to hit this target."
+          />
+
+          {requiredPremium && desiredRoi && (
+            <div style={{ marginTop: 12 }}>
+              <Card accent style={{ background: 'rgba(0,224,122,0.08)', border: '1px solid rgba(0,224,122,0.3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>🎯</span>
+                  <Lbl style={{ margin: 0 }}>Target Premium/Share</Lbl>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: ACC, marginTop: 2 }}>
+                  {fmtD(requiredPremium)}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
+                  {fmtD(requiredPremium * 100)} per contract
+                </div>
+              </Card>
+            </div>
+          )}
+
+          <Sep label="Optional" />
+
+          <NumField
+            label="Actual Premium"
+            value={premium}
+            onChange={setPremium}
+            pre="$"
+            step={0.01}
+            ph="Enter actual"
+            note="Compare vs target"
+            help="Enter the actual premium quotes from your broker to compare against your target."
+          />
+          
+          {hasTarget && premium && (
+            <div style={{ marginTop: 10, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Actual vs Target</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(100, (parseFloat(premium) / requiredPremium) * 100)}%`,
+                      height: '100%',
+                      background: parseFloat(premium) >= requiredPremium ? ACC : '#ffa050',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+                <span style={{ 
+                  fontSize: 12, 
+                  fontWeight: 700, 
+                  color: parseFloat(premium) >= requiredPremium ? ACC : '#ffa050' 
+                }}>
+                  {parseFloat(premium) >= requiredPremium ? '✓ Met' : `${fmtPct((parseFloat(premium) / requiredPremium) * 100)}`}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          <NumField
+            label="Days to Expiration"
+            value={dte}
+            onChange={setDte}
+            suf="DTE"
+            step={1}
+            ph="30"
+            help="Days until option expires. 30-45 days is typical for wheel strategy. Affects annualized yield calculations."
+          />
+          <NumField
+            label="Budget"
+            value={budget}
+            onChange={setBudget}
+            pre="$"
+            step={1000}
+            ph="optional"
+            help="Total capital available. Used to calculate how many contracts you can sell and any leftover cash."
+          />
+
+          {result && (
+            <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <Badge label="OTM" value={fmtPct(Math.abs(result.otm))} pos={result.otm >= 0} />
+              <Badge label="Yield" value={fmtPct(result.yieldPct)} pos={true} />
+              {result.annualized && <Badge label="Ann." value={fmtPct(result.annualized)} pos={true} />}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div>
+        {result && (
+          <Card style={{ marginBottom: 16, background: 'linear-gradient(135deg, rgba(0,224,122,0.06) 0%, rgba(0,180,100,0.03) 100%)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <Lbl style={{ color: 'rgba(255,255,255,0.5)' }}>Strategy Summary</Lbl>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
+                  Sell {strikePrice && fmtD(strikePrice)} call on {stockPrice && fmtD(stockPrice)} stock
+                  {hasTarget && !premium && <span style={{ color: ACC, marginLeft: 8 }}>• Using target premium</span>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Max Profit</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: ACC }}>{fmtD(result.maxProfit)}/sh</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Breakeven</div>
+                  <div style={{ fontSize: 18, fontWeight: 700 }}>{fmtD(result.be)}</div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <Lbl style={{ marginBottom: 8, display: 'block' }}>Key Metrics</Lbl>
+        
+        {!result ? (
+          <div style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>
+            Enter stock price, strike, and desired ROI to see analysis
+          </div>
+        ) : (
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+              gap: 10
+            }}>
+              <KV k="Premium/Share" v={fmtD(result.maxProfit)} accent big />
+              <KV k="Breakeven" v={fmtD(result.be)} sub={`${fmtPct(result.prot)} protection`} />
+              <KV k="Max Profit" v={fmtD(result.maxProfit)} />
+              <KV k="ROI if Assigned" v={fmtPct(result.roiAssigned)} />
+              {result.annualized && <KV k="Ann. Yield" v={fmtPct(result.annualized)} />}
+              {result.dailyTheta && <KV k="Daily Theta" v={fmtD(result.dailyTheta)} />}
+            </div>
+
+            <Sep label="If Assigned Simulation" />
+            
+            <div style={{ display: 'grid', gap: 8, marginBottom: 16 }}>
+              {assignedScenarios.map((s, i) => (
+                <AssignedScenario 
+                  key={i}
+                  label={s.label}
+                  price={s.price}
+                  premium={p}
+                  strike={k}
+                  stockPrice={sp}
+                  isAssigned={s.isAssigned}
+                />
+              ))}
+            </div>
+
+            {result.bud && (
+              <>
+                <Sep label="Budget Allocation" />
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+                  gap: 10
+                }}>
+                  <KV k="Contracts" v={result.bud.ctrs} accent big />
+                  <KV k="Shares Used" v={result.bud.sharesUsed} />
+                  <KV k="Cash Leftover" v={fmtD(result.bud.leftover)} warn={result.bud.leftover > 0} />
+                  <KV k="Capital Deployed" v={fmtD(result.bud.deployed)} />
+                  <KV k="Premium Income" v={fmtD(result.bud.premTot)} accent />
+                  <KV k="Cost Basis" v={fmtD(result.bud.costBasis)} />
+                  {result.bud.annIncome && <KV k="Ann. Income" v={fmtPct(result.bud.annIncome)} />}
+                </div>
+              </>
+            )}
+
+            <Sep />
+            <Lbl>Scenario Analysis</Lbl>
+            <div style={{ marginTop: 10 }}>
+              <ScenarioTable scenarios={result.scenarios} targetRoi={parseFloat(desiredRoi)} />
+            </div>
+
+            <Card style={{ marginTop: 16 }}>
+              <Lbl>Payoff Diagram</Lbl>
+              <PayoffChart
+                sp={sp}
+                strike={k}
+                premium={p}
+                type="cc"
+              />
+            </Card>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
