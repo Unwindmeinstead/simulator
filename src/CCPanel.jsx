@@ -51,12 +51,12 @@ export default function CCPanel({ bp, state, setState }) {
   const budget = state?.budget || ''
   const desiredRoi = state?.desiredRoi || ''
 
-  const setStockPrice = (v) => setState(s => ({ ...s, stockPrice: v }))
-  const setStrikePrice = (v) => setState(s => ({ ...s, strikePrice: v }))
-  const setPremium = (v) => setState(s => ({ ...s, premium: v }))
-  const setDte = (v) => setState(s => ({ ...s, dte: v }))
-  const setBudget = (v) => setState(s => ({ ...s, budget: v }))
-  const setDesiredRoi = (v) => setState(s => ({ ...s, desiredRoi: v }))
+  const setStockPrice = (v) => setState && setState(s => ({ ...s, stockPrice: v }))
+  const setStrikePrice = (v) => setState && setState(s => ({ ...s, strikePrice: v }))
+  const setPremium = (v) => setState && setState(s => ({ ...s, premium: v }))
+  const setDte = (v) => setState && setState(s => ({ ...s, dte: v }))
+  const setBudget = (v) => setState && setState(s => ({ ...s, budget: v }))
+  const setDesiredRoi = (v) => setState && setState(s => ({ ...s, desiredRoi: v }))
 
   const sp = parseFloat(stockPrice)
   const k = parseFloat(strikePrice)

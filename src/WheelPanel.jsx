@@ -80,14 +80,14 @@ export default function WheelPanel({ bp, state, setState }) {
   const cspStrike = state?.cspStrike || ''
   const cspPremium = state?.cspPremium || ''
 
-  const setStockPrice = (v) => setState(s => ({ ...s, stockPrice: v }))
-  const setDte = (v) => setState(s => ({ ...s, dte: v }))
-  const setBudget = (v) => setState(s => ({ ...s, budget: v }))
-  const setDesiredRoi = (v) => setState(s => ({ ...s, desiredRoi: v }))
-  const setCcStrike = (v) => setState(s => ({ ...s, ccStrike: v }))
-  const setCcPremium = (v) => setState(s => ({ ...s, ccPremium: v }))
-  const setCspStrike = (v) => setState(s => ({ ...s, cspStrike: v }))
-  const setCspPremium = (v) => setState(s => ({ ...s, cspPremium: v }))
+  const setStockPrice = (v) => setState && setState(s => ({ ...s, stockPrice: v }))
+  const setDte = (v) => setState && setState(s => ({ ...s, dte: v }))
+  const setBudget = (v) => setState && setState(s => ({ ...s, budget: v }))
+  const setDesiredRoi = (v) => setState && setState(s => ({ ...s, desiredRoi: v }))
+  const setCcStrike = (v) => setState && setState(s => ({ ...s, ccStrike: v }))
+  const setCcPremium = (v) => setState && setState(s => ({ ...s, ccPremium: v }))
+  const setCspStrike = (v) => setState && setState(s => ({ ...s, cspStrike: v }))
+  const setCspPremium = (v) => setState && setState(s => ({ ...s, cspPremium: v }))
 
   const targetCspStrike = useMemo(() => {
     if (!stockPrice || !cspPremium || !desiredRoi) return null
