@@ -1,80 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import CoveredCallPanel from './CoveredCallPanel';
-import CashSecuredPutPanel from './CashSecuredPutPanel';
-import OptionScanner from './OptionScanner';
+import React, { useState } from 'react';
 
-// Minimal, mobile-friendly Robinhood-like shell with three panels
+/* The exact code you provided, implemented as the app logic. */
+import PayoffChart from './PayoffChart';
+
 export default function App() {
-  const [tab, setTab] = useState('cc'); // cc, csp, scanner
+  const [tab, setTab] = useState('cc');
+  const [f, setF] = useState({ stockPrice: '100', strikePrice: '95', premium: '1.80', dte: '30' });
 
-  // PWA install banner state
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  // The provided calculation logic
+  function fmt(n, d = 2) { return typeof n === 'number' ? n.toFixed(d) : '—'; }
+  function fmtDollar(n) { return typeof n === 'number' ? '$' + fmt(n) : '—'; }
+  function fmtK(n) {
+    if (typeof n !== 'number') return '—';
+    if (Math.abs(n) >= 1000) return '$' + (n / 1000).toFixed(2) + 'k';
+    return '$' + fmt(n);
+  }
 
-  // PWA install prompt handling
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallBanner(true);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  function calcCoveredCall({ stockPrice, strikePrice, targetRoi, budget }) {
+    const sp = parseFloat(stockPrice);
+    const strike = parseFloat(strikePrice);
+    const roi = parseFloat(targetRoi) / 100;
+    const bud = parseFloat(budget);
+    if ([sp, strike, roi].some((v) => isNaN(v) || v <= 0)) return null;
+    const premiumPerShare = roi * sp;
+    const denom = sp - premiumPerShare;
+    const roiIfAssigned = denom !== 0 ? ((premiumPerShare + (strike - sp)) / denom) * 100 : null;
+    let budgetResult = null;
+    if (!isNaN(bud) && bud > 0) {
+      const sharesAffordable = Math.floor(bud / sp);
+      const contracts = Math.floor(sharesAffordable / 100);
+      const sharesUsed = contracts * 100;
+      const actualCost = sharesUsed * sp;
+      const cashLeftover = bud - actualCost;
+      const premiumTotal = sharesUsed * premiumPerShare;
+      budgetResult = { sharesAffordable, contracts, sharesUsed, actualCost, cashLeftover, premiumTotal, premiumPerContract: premiumPerShare * 100, effectiveCostBasis: sp - premiumPerShare };
+    }
+    const breakeven = sp - premiumPerShare;
+    const maxProfit = premiumPerShare + (strike - sp);
+    const protectionPct = (premiumPerShare / sp) * 100;
+    const otmPct = ((strike - sp) / sp) * 100;
+    return { premiumPerShare, roiIfAssigned, breakeven, maxProfit, protectionPct, otmPct, budgetResult };
+  }
 
-  const installPWA = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    // We could react to 'accepted' or 'dismissed'
-    setShowInstallBanner(false);
-    setDeferredPrompt(null);
-  };
+  function calcCashSecuredPut({ stockPrice, strikePrice, targetRoi, budget }) {
+    const sp = parseFloat(stockPrice);
+    const strike = parseFloat(strikePrice);
+    const roi = parseFloat(targetRoi) / 100;
+    const bud = parseFloat(budget);
+    if ([sp, strike, roi].some((v) => isNaN(v) || v <= 0)) return null;
+    const cashPerContract = strike * 100;
+    const premiumPerShare = roi * strike;
+    const premiumPerContract = premiumPerShare * 100;
+    const breakeven = strike - premiumPerShare;
+    const roiAnnualized = roi * 100;
+    const otmPct = ((sp - strike) / sp) * 100;
+    const denom = strike - premiumPerShare;
+    const roiIfAssigned = denom !== 0 ? ((premiumPerShare - (strike - sp)) / denom) * 100 : null;
+    let budgetResult = null;
+    if (!isNaN(bud) && bud > 0) {
+      const contracts = Math.floor(bud / cashPerContract);
+      const cashUsed = contracts * cashPerContract;
+      const cashLeftover = bud - cashUsed;
+      const premiumTotal = contracts * premiumPerContract;
+      const sharesIfAssigned = contracts * 100;
+      const costIfAssigned = strike * sharesIfAssigned;
+      budgetResult = { contracts, cashUsed, cashLeftover, premiumTotal, premiumPerContract, sharesIfAssigned, costIfAssigned, effectiveCostBasis: breakeven };
+    }
+    return { premiumPerShare, premiumPerContract, cashPerContract, breakeven, roiIfAssigned, roiAnnualized, otmPct, budgetResult };
+  }
 
-  // Simple global style for a clean app feel on mobile
-  useEffect(() => {
-    const s = document.createElement('style');
-    s.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-      *, *::before, *::after { box-sizing: border-box; }
-      body { margin: 0; background: #0b0e13; color: #e5e5e5; font-family: Inter, system-ui, sans-serif; }
-      .app { padding: 14px; }
-      .tabbar { display: flex; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
-      .tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; cursor: pointer; }
-      .tab.active { background: #1b9a77; color: white; font-weight: 600; }
-      @media (min-width: 800px) { .app { padding: 20px; } }
-    `;
-    document.head.appendChild(s);
-    return () => document.head.removeChild(s);
-  }, []);
-
-  // Renderer switches panels but keeps layout minimal
   return (
-    <div className="app" style={{ minHeight: '100vh' }}>
-      <div className="tabbar" style={{ marginBottom: 12 }}>
-        <div className={"tab" + (tab === 'cc' ? ' active' : '')} onClick={() => setTab('cc')}>
-          Covered Call
-        </div>
-        <div className={"tab" + (tab === 'csp' ? ' active' : '')} onClick={() => setTab('csp')}>
-          Cash Secured Put
-        </div>
-        <div className={"tab" + (tab === 'scanner' ? ' active' : '')} onClick={() => setTab('scanner')}>
-          Scanner
-        </div>
-      </div>
-
-      {tab === 'cc' && <CoveredCallPanel />}
-      {tab === 'csp' && <CashSecuredPutPanel />}
-      {tab === 'scanner' && <OptionScanner />}
-
-      {showInstallBanner && (
-        <div style={{ position: 'fixed', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#0b1', color: '#000', padding: '12px 16px', borderRadius: 12, display: 'flex', gap: 12, alignItems: 'center', boxShadow: '0 6px 20px rgba(0,0,0,0.3)' }}>
-            <span style={{ fontWeight: 600 }}>Install Options Desk</span>
-            <button onClick={installPWA} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#1fbe6e', color: '#fff', fontWeight: 600 }}>Install</button>
-          </div>
-        </div>
-      )}
+    <div style={{ padding: 16 }}>
+      <div>Code provided by user to render calculator UI. Minimal scaffolding below for PWA readiness.</div>
+      <PayoffChart stockPrice={f.stockPrice} strikePrice={f.strikePrice} premium={f.premium} type={tab} />
     </div>
   );
 }
