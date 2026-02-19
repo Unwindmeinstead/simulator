@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import OptionScreener from "./OptionScreener";
 
 /* ══════════════════════════════════════════
    MATH
@@ -443,6 +444,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 22, borderBottom: `1px solid ${GB}`, paddingBottom: 16 }}>
           <Pill label="Covered Call"     active={tab === "cc"}  onClick={() => setTab("cc")} />
           <Pill label="Cash Secured Put" active={tab === "csp"} onClick={() => setTab("csp")} />
+          <Pill label="Option Screener"  active={tab === "screener"} onClick={() => setTab("screener")} />
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.18)" }}>
             Not financial advice
@@ -452,6 +454,7 @@ export default function App() {
         {/* ── Panels ── */}
         {tab === "cc"  && <CCPanel />}
         {tab === "csp" && <CSPPanel />}
+        {tab === "screener" && <OptionScreener />}
       </div>
     </div>
   );
