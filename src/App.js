@@ -302,15 +302,7 @@ function CoveredCallPanel() {
   );
 }
 
-function PayoffChart({ stockPrice, strikePrice, premium, type }) {
-  // tiny placeholder chart for launching
-  return (
-    <svg width="100%" height={120} viewBox="0 0 320 120" style={{ display: 'block' }}>
-      <rect width="100%" height="100%" fill="#0b0f15" />
-      <text x="50%" y="50%" fill="#9bd" textAnchor="middle" fontFamily="monospace">PayoffChart</text>
-    </svg>
-  );
-}
+// PayoffChart is defined above; removed duplicate to fix duplicate identifier error
 
 function CSPPanel() {
   const [f, setF] = useState({ stockPrice: '100', strikePrice: '95', premium: '1.80', dte: '30', budget: '' });
