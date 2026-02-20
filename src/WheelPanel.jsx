@@ -70,25 +70,18 @@ function WheelLeg({ phase, stockPrice, strike, premium, dte, result, isDesktop }
   )
 }
 
-export default function WheelPanel({ bp, state, setState }) {
-  const stockPrice = state?.stockPrice || ''
-  const dte = state?.dte || ''
-  const budget = state?.budget || ''
-  const desiredRoi = state?.desiredRoi || ''
-  const ccStrike = state?.ccStrike || ''
-  const ccPremium = state?.ccPremium || ''
-  const cspStrike = state?.cspStrike || ''
-  const cspPremium = state?.cspPremium || ''
+export default function WheelPanel({ bp }) {
+  const [stockPrice, setStockPrice] = useState('')
+  const [dte, setDte] = useState('')
+  const [budget, setBudget] = useState('')
+  const [desiredRoi, setDesiredRoi] = useState('')
+  const [ccStrike, setCcStrike] = useState('')
+  const [ccPremium, setCcPremium] = useState('')
+  const [cspStrike, setCspStrike] = useState('')
+  const [cspPremium, setCspPremium] = useState('')
 
-  const setStockPrice = (v) => setState && setState(s => ({ ...s, stockPrice: v }))
-  const setDte = (v) => setState && setState(s => ({ ...s, dte: v }))
-  const setBudget = (v) => setState && setState(s => ({ ...s, budget: v }))
-  const setDesiredRoi = (v) => setState && setState(s => ({ ...s, desiredRoi: v }))
-  const setCcStrike = (v) => setState && setState(s => ({ ...s, ccStrike: v }))
-  const setCcPremium = (v) => setState && setState(s => ({ ...s, ccPremium: v }))
-  const setCspStrike = (v) => setState && setState(s => ({ ...s, cspStrike: v }))
-  const setCspPremium = (v) => setState && setState(s => ({ ...s, cspPremium: v }))
-
+  const sp = parseFloat(stockPrice) || 0
+  
   const targetCspStrike = useMemo(() => {
     if (!stockPrice || !cspPremium || !desiredRoi) return null
     return calcRequiredStrikeCSP(stockPrice, cspPremium, desiredRoi)
@@ -120,9 +113,6 @@ export default function WheelPanel({ bp, state, setState }) {
     const cspYield = cspResult.yieldPct / 100
     const ccYield = ccResult.yieldPct / 100
     const totalYield = cspYield + ccYield
-    const totalPrem = cspResult.bud ? cspResult.bud.premTot : 0 + (ccResult.bud ? ccResult.bud.premTot : 0)
-    
-    const deployed = cspResult.bud ? cspResult.bud.cashUsed : cspResult.be * 100
     
     return {
       cspYieldPct: cspResult.yieldPct,
@@ -132,7 +122,7 @@ export default function WheelPanel({ bp, state, setState }) {
       ccBreakeven: ccResult.be,
       totalPremium: cspPremium && ccPremium ? (parseFloat(cspPremium) + parseFloat(ccPremium)) : null,
       avgCostBasis: (cspResult.be + ccResult.be) / 2,
-      deployed
+      deployed: cspResult.bud ? cspResult.bud.cashUsed : cspResult.be * 100
     }
   }, [cspResult, ccResult, cspPremium, ccPremium])
 
@@ -336,18 +326,18 @@ export default function WheelPanel({ bp, state, setState }) {
               <Card>
                 <Lbl>CSP Payoff</Lbl>
                 <PayoffChart
-                  sp={parseFloat(stockPrice)}
-                  strike={parseFloat(effectiveCspStrike)}
-                  premium={parseFloat(cspPremium)}
+                  sp={sp}
+                  strike={parseFloat(effectiveCspStrike) || 0}
+                  premium={parseFloat(cspPremium) || 0}
                   type="csp"
                 />
               </Card>
               <Card>
                 <Lbl>CC Payoff</Lbl>
                 <PayoffChart
-                  sp={parseFloat(stockPrice)}
-                  strike={parseFloat(ccStrike)}
-                  premium={parseFloat(effectiveCcPremium)}
+                  sp={sp}
+                  strike={parseFloat(ccStrike) || 0}
+                  premium={parseFloat(effectiveCcPremium) || 0}
                   type="cc"
                 />
               </Card>

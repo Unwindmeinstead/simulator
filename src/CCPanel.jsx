@@ -43,40 +43,33 @@ function AssignedScenario({ label, price, premium, strike, stockPrice, isAssigne
   )
 }
 
-export default function CCPanel({ bp, state, setState }) {
-  const stockPrice = state?.stockPrice || ''
-  const strikePrice = state?.strikePrice || ''
-  const premium = state?.premium || ''
-  const dte = state?.dte || ''
-  const budget = state?.budget || ''
-  const desiredRoi = state?.desiredRoi || ''
+export default function CCPanel({ bp }) {
+  const [stockPrice, setStockPrice] = useState('')
+  const [strikePrice, setStrikePrice] = useState('')
+  const [premium, setPremium] = useState('')
+  const [dte, setDte] = useState('')
+  const [budget, setBudget] = useState('')
+  const [desiredRoi, setDesiredRoi] = useState('')
 
-  const setStockPrice = (v) => setState && setState(s => ({ ...s, stockPrice: v }))
-  const setStrikePrice = (v) => setState && setState(s => ({ ...s, strikePrice: v }))
-  const setPremium = (v) => setState && setState(s => ({ ...s, premium: v }))
-  const setDte = (v) => setState && setState(s => ({ ...s, dte: v }))
-  const setBudget = (v) => setState && setState(s => ({ ...s, budget: v }))
-  const setDesiredRoi = (v) => setState && setState(s => ({ ...s, desiredRoi: v }))
-
-  const sp = parseFloat(stockPrice)
-  const k = parseFloat(strikePrice)
-  const p = (requiredPremium || premium) ? parseFloat(requiredPremium || premium) : null
+  const sp = parseFloat(stockPrice) || 0
+  const k = parseFloat(strikePrice) || 0
+  const pVal = parseFloat(premium) || 0
 
   const requiredPremium = useMemo(() => {
     if (!stockPrice || !strikePrice || !desiredRoi) return null
     return calcRequiredPremiumCC(stockPrice, strikePrice, desiredRoi)
   }, [stockPrice, strikePrice, desiredRoi])
 
-  const effectivePremiumVal = requiredPremium || premium
+  const effectivePremium = requiredPremium || premium
   const hasTarget = requiredPremium && desiredRoi
 
   const result = useMemo(() => {
-    if (!stockPrice || !strikePrice || !effectivePremiumVal) return null
-    return calcCC({ stockPrice, strikePrice, premium: effectivePremiumVal, dte, budget })
-  }, [stockPrice, strikePrice, effectivePremiumVal, dte, budget])
+    if (!stockPrice || !strikePrice || !effectivePremium) return null
+    return calcCC({ stockPrice, strikePrice, premium: effectivePremium, dte, budget })
+  }, [stockPrice, strikePrice, effectivePremium, dte, budget])
 
   const assignedScenarios = useMemo(() => {
-    if (!sp || !k || !p) return []
+    if (!sp || !k || !pVal) return []
     
     return [
       { label: 'Stock below strike', price: sp * 0.95, isAssigned: false },
@@ -86,10 +79,10 @@ export default function CCPanel({ bp, state, setState }) {
       { label: 'Above strike +20%', price: k * 1.20, isAssigned: true },
     ].map(s => ({
       ...s,
-      pl: s.isAssigned ? (s.price - sp + p) : p,
-      roi: s.isAssigned ? ((s.price - sp + p) / (sp - p) * 100) : (p / sp * 100)
+      pl: s.isAssigned ? (s.price - sp + pVal) : pVal,
+      roi: s.isAssigned ? ((s.price - sp + pVal) / (sp - pVal) * 100) : (pVal / sp * 100)
     }))
-  }, [sp, k, p])
+  }, [sp, k, pVal])
 
   const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
 
@@ -162,7 +155,7 @@ export default function CCPanel({ bp, state, setState }) {
             help="Enter the actual premium quotes from your broker to compare against your target."
           />
           
-          {hasTarget && premium && (
+          {hasTarget && premium && parseFloat(premium) > 0 && (
             <div style={{ marginTop: 10, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Actual vs Target</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -270,7 +263,7 @@ export default function CCPanel({ bp, state, setState }) {
                   key={i}
                   label={s.label}
                   price={s.price}
-                  premium={p}
+                  premium={pVal}
                   strike={k}
                   stockPrice={sp}
                   isAssigned={s.isAssigned}
@@ -308,7 +301,7 @@ export default function CCPanel({ bp, state, setState }) {
               <PayoffChart
                 sp={sp}
                 strike={k}
-                premium={p}
+                premium={parseFloat(effectivePremium) || 0}
                 type="cc"
               />
             </Card>

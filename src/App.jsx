@@ -10,53 +10,9 @@ function App() {
   const bp = useBreakpoint()
   const [tab, setTab] = useState('wheel')
 
-  const [wheelState, setWheelState] = useState({
-    stockPrice: '',
-    dte: '',
-    budget: '',
-    desiredRoi: '',
-    cspPremium: '',
-    cspStrike: '',
-    ccStrike: '',
-    ccPremium: ''
-  })
-
-  const [ccState, setCcState] = useState({
-    stockPrice: '',
-    strikePrice: '',
-    premium: '',
-    dte: '',
-    budget: '',
-    desiredRoi: ''
-  })
-
-  const [cspState, setCspState] = useState({
-    stockPrice: '',
-    strikePrice: '',
-    premium: '',
-    dte: '',
-    budget: '',
-    desiredRoi: ''
-  })
-
   const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
 
   const tabName = tab === 'cc' ? 'Covered Call' : tab === 'csp' ? 'Cash Secured Put' : tab === 'manual' ? 'Manual' : 'Wheel Strategy'
-
-  const renderPanel = () => {
-    switch(tab) {
-      case 'wheel':
-        return <WheelPanel bp={bp} state={wheelState} setState={setWheelState} />
-      case 'cc':
-        return <CCPanel bp={bp} state={ccState} setState={setCcState} />
-      case 'csp':
-        return <CSPanel bp={bp} state={cspState} setState={setCspState} />
-      case 'manual':
-        return <ManualPanel bp={bp} />
-      default:
-        return <WheelPanel bp={bp} state={wheelState} setState={setWheelState} />
-    }
-  }
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative' }}>
@@ -268,7 +224,10 @@ function App() {
         position: 'relative',
         zIndex: 1
       }}>
-        {renderPanel()}
+        {tab === 'wheel' && <WheelPanel key="wheel" bp={bp} />}
+        {tab === 'cc' && <CCPanel key="cc" bp={bp} />}
+        {tab === 'csp' && <CSPanel key="csp" bp={bp} />}
+        {tab === 'manual' && <ManualPanel key="manual" bp={bp} />}
       </main>
     </div>
   )

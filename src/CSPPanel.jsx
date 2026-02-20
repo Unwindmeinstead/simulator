@@ -43,40 +43,33 @@ function AssignedScenario({ label, price, premium, strike, isAssigned }) {
   )
 }
 
-export default function CSPanel({ bp, state, setState }) {
-  const stockPrice = state?.stockPrice || ''
-  const strikePrice = state?.strikePrice || ''
-  const premium = state?.premium || ''
-  const dte = state?.dte || ''
-  const budget = state?.budget || ''
-  const desiredRoi = state?.desiredRoi || ''
+export default function CSPanel({ bp }) {
+  const [stockPrice, setStockPrice] = useState('')
+  const [strikePrice, setStrikePrice] = useState('')
+  const [premium, setPremium] = useState('')
+  const [dte, setDte] = useState('')
+  const [budget, setBudget] = useState('')
+  const [desiredRoi, setDesiredRoi] = useState('')
 
-  const setStockPrice = (v) => setState && setState(s => ({ ...s, stockPrice: v }))
-  const setStrikePrice = (v) => setState && setState(s => ({ ...s, strikePrice: v }))
-  const setPremium = (v) => setState && setState(s => ({ ...s, premium: v }))
-  const setDte = (v) => setState && setState(s => ({ ...s, dte: v }))
-  const setBudget = (v) => setState && setState(s => ({ ...s, budget: v }))
-  const setDesiredRoi = (v) => setState && setState(s => ({ ...s, desiredRoi: v }))
-
-  const sp = parseFloat(stockPrice)
-  const k = (requiredStrike || strikePrice) ? parseFloat(requiredStrike || strikePrice) : null
-  const p = parseFloat(premium)
+  const sp = parseFloat(stockPrice) || 0
+  const k = parseFloat(strikePrice) || 0
+  const pVal = parseFloat(premium) || 0
 
   const requiredStrike = useMemo(() => {
     if (!stockPrice || !premium || !desiredRoi) return null
     return calcRequiredStrikeCSP(stockPrice, premium, desiredRoi)
   }, [stockPrice, premium, desiredRoi])
 
-  const effectiveStrikeVal = requiredStrike || strikePrice
+  const effectiveStrike = requiredStrike || strikePrice
   const hasTarget = requiredStrike && desiredRoi && premium
 
   const result = useMemo(() => {
-    if (!stockPrice || !effectiveStrikeVal || !premium) return null
-    return calcCSP({ stockPrice, strikePrice: effectiveStrikeVal, premium, dte, budget })
-  }, [stockPrice, effectiveStrikeVal, premium, dte, budget])
+    if (!stockPrice || !effectiveStrike || !premium) return null
+    return calcCSP({ stockPrice, strikePrice: effectiveStrike, premium, dte, budget })
+  }, [stockPrice, effectiveStrike, premium, dte, budget])
 
   const assignedScenarios = useMemo(() => {
-    if (!sp || !k || !p) return []
+    if (!sp || !k || !pVal) return []
     
     return [
       { label: 'Below strike -20%', price: k * 0.80, isAssigned: true },
@@ -86,10 +79,10 @@ export default function CSPanel({ bp, state, setState }) {
       { label: 'Above strike +10%', price: k * 1.10, isAssigned: false },
     ].map(s => ({
       ...s,
-      pl: s.isAssigned ? (p - Math.max(0, k - s.price)) : p,
-      roi: s.isAssigned ? ((p - Math.max(0, k - s.price)) / (k - p) * 100) : (p / k * 100)
+      pl: s.isAssigned ? (pVal - Math.max(0, k - s.price)) : pVal,
+      roi: s.isAssigned ? ((pVal - Math.max(0, k - s.price)) / (k - pVal) * 100) : (pVal / k * 100)
     }))
-  }, [sp, k, p])
+  }, [sp, k, pVal])
 
   const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
 
@@ -200,7 +193,7 @@ export default function CSPanel({ bp, state, setState }) {
               <div>
                 <Lbl style={{ color: 'rgba(255,255,255,0.5)' }}>Strategy Summary</Lbl>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-                  Sell {effectiveStrikeVal && fmtD(effectiveStrikeVal)} put on {stockPrice && fmtD(stockPrice)} stock
+                  Sell {effectiveStrike && fmtD(effectiveStrike)} put on {stockPrice && fmtD(stockPrice)} stock
                   {hasTarget && !strikePrice && <span style={{ color: ACC, marginLeft: 8 }}>• Using target strike</span>}
                 </div>
               </div>
@@ -247,7 +240,7 @@ export default function CSPanel({ bp, state, setState }) {
                   key={i}
                   label={s.label}
                   price={s.price}
-                  premium={p}
+                  premium={pVal}
                   strike={k}
                   isAssigned={s.isAssigned}
                 />
@@ -284,7 +277,7 @@ export default function CSPanel({ bp, state, setState }) {
               <PayoffChart
                 sp={sp}
                 strike={k}
-                premium={p}
+                premium={pVal}
                 type="csp"
               />
             </Card>
