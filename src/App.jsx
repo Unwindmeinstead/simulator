@@ -26,7 +26,7 @@ function App() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: isDesktop ? '0 24px' : '0 16px',
-        background: 'rgba(8,9,11,0.92)',
+        background: '#000000',
         backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${GB}`,
         zIndex: 100
@@ -63,7 +63,7 @@ function App() {
         </div>
         <div style={{
           fontSize: 10,
-          color: 'rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.3)',
           fontFamily: 'JetBrains Mono'
         }}>
           {!isDesktop ? (
@@ -83,7 +83,7 @@ function App() {
           left: 0,
           right: 0,
           height: 72,
-          background: 'rgba(8,9,11,0.95)',
+          background: '#000000',
           backdropFilter: 'blur(16px)',
           borderTop: `1px solid ${GB}`,
           display: 'flex',

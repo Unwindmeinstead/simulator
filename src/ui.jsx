@@ -1,13 +1,13 @@
 import { useState } from 'react'
 
-export const G = 'rgba(255,255,255,0.04)'
-export const GB = 'rgba(255,255,255,0.08)'
-export const GA = 'rgba(0,224,122,0.07)'
-export const GAB = 'rgba(0,224,122,0.22)'
-export const ACC = '#00e07a'
-export const WARN = 'rgba(255,160,80,0.15)'
-export const WARN_BORDER = 'rgba(255,160,80,0.4)'
-export const RED = '#e05050'
+export const G = 'rgba(255,255,255,0.06)'
+export const GB = 'rgba(255,255,255,0.12)'
+export const GA = 'rgba(0,224,122,0.1)'
+export const GAB = 'rgba(0,224,122,0.3)'
+export const ACC = '#00ff88'
+export const WARN = 'rgba(255,160,80,0.2)'
+export const WARN_BORDER = 'rgba(255,160,80,0.5)'
+export const RED = '#ff5050'
 
 export function Lbl({ children, style }) {
   return (
