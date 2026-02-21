@@ -120,12 +120,12 @@ export default function OptionScanner() {
     maxDelta: 0.50,
     minDTE: 7,
     maxDTE: 45,
-    minROI: 10,
+    minROI: 5,
     maxStockPrice: 500,
     minPremium: 0,
     strategy: "both",
     budget: 10000,
-    hasBid: true
+    hasBid: false
   });
 
   const setFilter = (key, value) => {
@@ -179,11 +179,11 @@ export default function OptionScanner() {
       maxDelta: 0.50,
       minDTE: 7,
       maxDTE: 45,
-      minROI: 10,
+      minROI: 5,
       maxStockPrice: 500,
       minPremium: 0,
       strategy: "both",
-      hasBid: true,
+      hasBid: false,
       budget: 10000
     }));
   };
