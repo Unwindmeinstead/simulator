@@ -99,7 +99,7 @@ const fK = n => n >= 1000 ? (n / 1000).toFixed(1) + "K" : String(n ?? 0);
 
 const POPULAR_STOCKS = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'SPY', 'QQQ', 'COIN', 'PLTR', 'JPM', 'NFLX', 'DIS', 'AMAT', 'MU', 'INTC', 'CRM', 'ORCL'];
 
-const HUNT_STOCKS = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'SPY', 'QQQ', 'COIN', 'PLTR', 'JPM', 'NFLX', 'DIS', 'AMAT', 'MU', 'INTC', 'CRM', 'ORCL', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'SOFI', 'UPST', 'SNAP', 'PLTR', 'SOFI', 'RBLX', 'SHOP', 'DOCU', 'ZM', 'CRWD', 'NET', 'DDOG', 'SNOW', 'OKTA', 'HUBS', 'TWLO', 'SQ', 'ROKU', 'PINS', 'SNAP', 'DISCA', 'VIAC', 'PARA', 'WBD', 'DIS', 'NFLX', 'CMCSA'];
+const HUNT_STOCKS = ['AAPL', 'TSLA', 'NVDA', 'META', 'AMD', 'SPY', 'QQQ', 'COIN', 'PLTR', 'NFLX', 'AMAT', 'MU', 'INTC', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'SOFI', 'UPST', 'RBLX', 'SHOP', 'DOCU', 'ZM', 'CRWD', 'NET', 'DDOG', 'SNOW', 'OKTA', 'HUBS', 'TWLO', 'SQ', 'ROKU', 'PINS', 'WBD', 'AMC', 'GME', 'BB', 'BBBY', 'SPRT', 'ATER', 'CLOV', 'NAKD', 'SENS', 'CTXR', 'OPCH', 'ALPP', 'DNN', 'UEC', 'URG', 'PLAG', 'MNTR', 'TELL', 'SENS', 'NVAX', 'PRTK', 'AXSM', 'ABML', 'CTRM', 'ESGC', 'HVTF', 'ICOP', 'JMDA', 'KTOI', 'LGHL', 'MBCN', 'NEPH', 'NVAX', 'OEG', 'OPRT', 'PDSB', 'PEV', 'PLIN', 'POWW', 'PRTH', 'PXS', 'RIDE', 'RMTI', 'SABR', 'SAMA', 'SCKT', 'SFT', 'SGMO', 'SLDB', 'SNAP', 'SPWR', 'SRGA', 'TARA', 'TCDA', 'TNXP', 'TRCH', 'TSLA', 'TTNP', 'VEON', 'WISH', 'ZGNX'];
 
 const getWatchlist = () => {
   try {
@@ -131,8 +131,8 @@ export default function OptionScanner() {
     budget: 10000,
     hasBid: false,
     huntMode: false,
-    huntMaxPrice: 15,
-    huntMinYield: 50
+    huntMaxPrice: 30,
+    huntMinYield: 20
   });
 
   const setFilter = (key, value) => {
@@ -171,13 +171,13 @@ export default function OptionScanner() {
   };
 
   const getEffectiveFilters = () => ({
-    minDelta: filters.huntMode ? 0.05 : (filters.minDelta ?? 0.05),
-    maxDelta: filters.huntMode ? 0.50 : (filters.maxDelta ?? 0.50),
+    minDelta: filters.huntMode ? 0.01 : (filters.minDelta ?? 0.05),
+    maxDelta: filters.huntMode ? 0.99 : (filters.maxDelta ?? 0.50),
     minDTE: filters.huntMode ? 7 : (filters.minDTE ?? 0),
-    maxDTE: filters.huntMode ? 45 : (filters.maxDTE ?? 999),
+    maxDTE: filters.huntMode ? 60 : (filters.maxDTE ?? 999),
     minROI: filters.huntMode ? filters.huntMinYield : (filters.minROI ?? 0),
     maxStockPrice: filters.huntMode ? filters.huntMaxPrice : (filters.maxStockPrice ?? 99999),
-    minPremium: filters.huntMode ? 0 : (filters.minPremium ?? 0),
+    minPremium: filters.huntMode ? 0.01 : (filters.minPremium ?? 0),
     strategy: filters.huntMode ? "both" : (filters.strategy || "both"),
     hasBid: filters.huntMode ? false : (filters.hasBid ?? false),
     huntMode: filters.huntMode ?? false
@@ -197,8 +197,8 @@ export default function OptionScanner() {
       hasBid: false,
       budget: 10000,
       huntMode: false,
-      huntMaxPrice: 15,
-      huntMinYield: 50
+      huntMaxPrice: 30,
+      huntMinYield: 20
     }));
   };
 
