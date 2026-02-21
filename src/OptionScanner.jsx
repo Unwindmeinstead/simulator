@@ -113,6 +113,8 @@ export default function OptionScanner() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
   const [selectedResult, setSelectedResult] = useState(null);
+  const [sortCol, setSortCol] = useState("quantScore");
+  const [sortDir, setSortDir] = useState("desc");
   const [filters, setFilters] = useState({
     stockSource: "popular",
     watchlist: getWatchlist(),
@@ -607,24 +609,34 @@ export default function OptionScanner() {
             </div>
             {/* Header */}
             <div style={{ display: "flex", padding: "8px 12px", background: "rgba(0,0,0,0.5)", fontSize: 9, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", alignItems: "center" }}>
-              <div style={{ width: 50 }}>Type</div>
-              <div style={{ width: 50 }}>Stock</div>
-              <div style={{ width: 50 }}>Price</div>
-              <div style={{ width: 55 }}>Strike</div>
+              <div style={{ width: 50, cursor: "pointer" }} onClick={() => { setSortCol("type"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Type {sortCol === "type" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 50, cursor: "pointer" }} onClick={() => { setSortCol("ticker"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Stock {sortCol === "ticker" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 50, cursor: "pointer" }} onClick={() => { setSortCol("S"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Price {sortCol === "S" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 55, cursor: "pointer" }} onClick={() => { setSortCol("K"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Strike {sortCol === "K" && (sortDir === "asc" ? "↑" : "↓")}</div>
               <div style={{ width: 45 }}>Bid</div>
               <div style={{ width: 45 }}>Ask</div>
-              <div style={{ width: 40 }}>Δ</div>
-              <div style={{ width: 45 }}>IV</div>
+              <div style={{ width: 40, cursor: "pointer" }} onClick={() => { setSortCol("delta"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Δ {sortCol === "delta" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 45, cursor: "pointer" }} onClick={() => { setSortCol("iv"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>IV {sortCol === "iv" && (sortDir === "asc" ? "↑" : "↓")}</div>
               <div style={{ width: 40 }}>IV</div>
-              <div style={{ width: 40 }}>Vol</div>
-              <div style={{ width: 35 }}>DTE</div>
-              <div style={{ width: 50, color: "#00ff88" }}>DTE%</div>
-              <div style={{ width: 50 }}>Ann%</div>
-              <div style={{ width: 50, color: "#ffaa00" }}>Quant</div>
+              <div style={{ width: 40, cursor: "pointer" }} onClick={() => { setSortCol("volume"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Vol {sortCol === "volume" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 35, cursor: "pointer" }} onClick={() => { setSortCol("dte"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>DTE {sortCol === "dte" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 50, color: "#00ff88", cursor: "pointer" }} onClick={() => { setSortCol("dteYield"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>DTE% {sortCol === "dteYield" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 50, cursor: "pointer" }} onClick={() => { setSortCol("annYield"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Ann% {sortCol === "annYield" && (sortDir === "asc" ? "↑" : "↓")}</div>
+              <div style={{ width: 50, color: "#ffaa00", cursor: "pointer" }} onClick={() => { setSortCol("quantScore"); setSortDir(sortDir === "asc" ? "desc" : "asc"); }}>Quant {sortCol === "quantScore" && (sortDir === "asc" ? "↑" : "↓")}</div>
             </div>
             
             {/* Rows */}
-            {results.map((r, i) => (
+            {(() => {
+              const sorted = [...results].sort((a, b) => {
+                let aVal = a[sortCol];
+                let bVal = b[sortCol];
+                if (typeof aVal === "string") aVal = aVal.toLowerCase();
+                if (typeof bVal === "string") bVal = bVal.toLowerCase();
+                if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+                if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+                return 0;
+              });
+              return sorted.map((r, i) => (
               <div 
                 key={i} 
                 onClick={() => { console.log("Clicked result:", r); setSelectedResult(r); }}
@@ -654,11 +666,12 @@ export default function OptionScanner() {
                 <div style={{ width: 35, color: "rgba(255,255,255,0.5)" }}>{r.dte}d</div>
                 <div style={{ width: 50, color: "#00ff88", fontWeight: 600 }}>{r.dteYield?.toFixed(2) ?? '—'}%</div>
                 <div style={{ width: 50, color: "rgba(255,255,255,0.5)" }}>{r.annYield?.toFixed(1) ?? '—'}%</div>
-                <div style={{ width: 50, color: getQuantScoreColor(r.quantScore), fontWeight: 600, fontSize: 10 }}>
+                <div style={{ width: 40, color: getQuantScoreColor(r.quantScore), fontWeight: 600, fontSize: 10 }}>
                   {r.quantScore > 0 ? "+" : ""}{r.quantScore}
                 </div>
               </div>
-            ))}
+            ));
+            })()}
           </div>
         )}
       </div>
