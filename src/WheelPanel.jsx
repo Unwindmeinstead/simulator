@@ -23,7 +23,7 @@ function WheelLeg({ phase, stockPrice, strike, premium, dte, result, isDesktop }
           background: isCSP ? ACC : '#ffa050',
           color: '#08090b',
           fontWeight: 700,
-          fontFamily: 'JetBrains Mono'
+          fontFamily: 'Poppins'
         }}>
           {phase}
         </span>
@@ -61,7 +61,7 @@ function WheelLeg({ phase, stockPrice, strike, premium, dte, result, isDesktop }
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Breakeven
           </div>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
             {result ? fmtD(result.be) : '—'}
           </div>
         </div>

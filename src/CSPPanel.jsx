@@ -1,42 +1,67 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { calcCSP, calcRequiredStrikeCSP, fmtD, fmtPct } from './math'
 import { NumField, Card, KV, Sep, Badge, Lbl, ACC, GB, G } from './ui'
 import ScenarioTable from './ScenarioTable'
 import PayoffChart from './PayoffChart'
 
+async function fetchPrice(symbol) {
+  if (!symbol) return null
+  const methods = [
+    () => fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`).then(r => r.json()),
+    () => fetch(`https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`).then(r => r.json()),
+  ]
+  for (const fn of methods) {
+    try {
+      const d = await fn()
+      if (d?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+        return d.chart.result[0].meta.regularMarketPrice
+      }
+    } catch (e) {
+      continue
+    }
+  }
+  return null
+}
+
+const DEMO_PRICES = { AAPL: 178.50, TSLA: 248.75, MSFT: 378.20, NVDA: 485.50, GOOGL: 142.30, AMZN: 152.80, META: 345.60, SPY: 445.20, QQQ: 385.40, AMD: 145.30 }
+
 function AssignedScenario({ label, price, premium, strike, isAssigned }) {
-  const pl = isAssigned ? (premium - Math.max(0, strike - price)) : premium
-  const isProfit = pl >= 0
+  const notAssignedGain = premium
+  const assignedGain = premium - Math.max(0, strike - price)
   
   return (
     <div style={{ 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between',
-      padding: '10px 12px',
-      background: isAssigned ? 'rgba(255,160,80,0.08)' : 'rgba(255,255,255,0.02)',
-      borderRadius: 6,
-      border: isAssigned ? '1px solid rgba(255,160,80,0.2)' : '1px solid rgba(255,255,255,0.05)'
+      padding: '12px 14px',
+      background: 'rgba(255,255,255,0.02)',
+      borderRadius: 8,
+      border: '1px solid rgba(255,255,255,0.06)'
     }}>
       <div>
-        <div style={{ fontSize: 11, color: isAssigned ? '#ffa050' : 'rgba(255,255,255,0.5)' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
           {label}
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 2 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2, color: '#ffffff' }}>
           {fmtD(price)}
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
-          {isAssigned ? 'ASSIGNED' : 'Not assigned'}
+      <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>NOT ASSIGNED</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: ACC }}>
+            +{fmtD(notAssignedGain)}
+          </div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>premium only</div>
         </div>
-        <div style={{ 
-          fontSize: 14, 
-          fontWeight: 700, 
-          color: isProfit ? ACC : '#e05050',
-          marginTop: 2
-        }}>
-          {isProfit ? '+' : ''}{fmtD(pl)}/sh
+        <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 9, color: '#ffa050', marginBottom: 4 }}>ASSIGNED</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: assignedGain >= 0 ? ACC : '#ff5050' }}>
+            {assignedGain >= 0 ? '+' : ''}{fmtD(assignedGain)}
+          </div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>+ get stock</div>
         </div>
       </div>
     </div>
@@ -44,12 +69,33 @@ function AssignedScenario({ label, price, premium, strike, isAssigned }) {
 }
 
 export default function CSPanel({ bp }) {
+  const [ticker, setTicker] = useState('')
+  const [tickerLoading, setTickerLoading] = useState(false)
   const [stockPrice, setStockPrice] = useState('')
   const [strikePrice, setStrikePrice] = useState('')
   const [premium, setPremium] = useState('')
   const [dte, setDte] = useState('')
   const [budget, setBudget] = useState('')
   const [desiredRoi, setDesiredRoi] = useState('')
+
+  const lookupTicker = useCallback(async () => {
+    const sym = ticker.trim().toUpperCase()
+    if (!sym) return
+    
+    setTickerLoading(true)
+    let price = await fetchPrice(sym)
+    
+    if (!price && DEMO_PRICES[sym]) {
+      price = DEMO_PRICES[sym]
+    }
+    
+    if (price) {
+      setStockPrice(price.toFixed(2))
+      const otmStrike = Math.floor(price * 0.98 / 0.5) * 0.5
+      setStrikePrice(otmStrike.toFixed(2))
+    }
+    setTickerLoading(false)
+  }, [ticker])
 
   const sp = parseFloat(stockPrice) || 0
   const k = parseFloat(strikePrice) || 0
@@ -95,6 +141,54 @@ export default function CSPanel({ bp }) {
       <div>
         <Card>
           <Lbl style={{ marginBottom: 12, display: 'block', color: ACC, fontSize: 11 }}>Cash Secured Put Strategy</Lbl>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ticker Symbol</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  type="text"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && lookupTicker()}
+                  placeholder="AAPL"
+                  style={{
+                    flex: 1,
+                    height: 44,
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    padding: '0 14px',
+                    color: '#ffffff',
+                    fontSize: 15,
+                    fontWeight: 600,
+                    outline: 'none',
+                    fontFamily: 'Poppins',
+                    textTransform: 'uppercase'
+                  }}
+                />
+                <button
+                  onClick={lookupTicker}
+                  disabled={tickerLoading}
+                  style={{
+                    height: 44,
+                    padding: '0 16px',
+                    background: ACC,
+                    border: 'none',
+                    borderRadius: 8,
+                    color: '#000000',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: tickerLoading ? 'not-allowed' : 'pointer',
+                    opacity: tickerLoading ? 0.6 : 1,
+                    fontFamily: 'Poppins'
+                  }}
+                >
+                  {tickerLoading ? '...' : 'Get'}
+                </button>
+              </div>
+            </div>
+          </div>
 
           <NumField
             label="Stock Price"

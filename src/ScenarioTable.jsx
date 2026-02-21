@@ -21,7 +21,7 @@ export default function ScenarioTable({ scenarios, targetRoi }) {
         minWidth: '420px',
         borderCollapse: 'collapse',
         fontSize: 12,
-        fontFamily: 'JetBrains Mono'
+        fontFamily: 'Poppins'
       }}>
         <thead>
           <tr>

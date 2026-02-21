@@ -16,3 +16,15 @@ code {
 * {
   box-sizing: border-box;
 }
+
+.radial-glow {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}

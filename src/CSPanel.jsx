@@ -1,13 +1,12 @@
 import { useState, useMemo } from 'react'
-import { calcCC, calcRequiredPremiumCC, fmtD, fmtPct } from './math'
+import { calcCSP, calcRequiredStrikeCSP, fmtD, fmtPct } from './math'
 import { NumField, Card, KV, Sep, Badge, Lbl, ACC, GB, G } from './ui'
 import ScenarioTable from './ScenarioTable'
 import PayoffChart from './PayoffChart'
 
-function AssignedScenario({ label, price, premium, strike, stockPrice, isAssigned }) {
+function AssignedScenario({ label, price, premium, strike, isAssigned }) {
   const notAssignedGain = premium
-  const assignedGain = Math.min(strike - stockPrice + premium, strike - stockPrice + premium)
-  const isProfit = isAssigned ? assignedGain >= 0 : notAssignedGain >= 0
+  const assignedGain = premium - Math.max(0, strike - price)
   
   return (
     <div style={{ 
@@ -41,14 +40,14 @@ function AssignedScenario({ label, price, premium, strike, stockPrice, isAssigne
           <div style={{ fontSize: 14, fontWeight: 700, color: assignedGain >= 0 ? ACC : '#ff5050' }}>
             {assignedGain >= 0 ? '+' : ''}{fmtD(assignedGain)}
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>+ stock gains</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>+ get stock</div>
         </div>
       </div>
     </div>
   )
 }
 
-export default function CCPanel({ bp }) {
+export default function CSPanel({ bp }) {
   const [stockPrice, setStockPrice] = useState('')
   const [strikePrice, setStrikePrice] = useState('')
   const [premium, setPremium] = useState('')
@@ -60,32 +59,32 @@ export default function CCPanel({ bp }) {
   const k = parseFloat(strikePrice) || 0
   const pVal = parseFloat(premium) || 0
 
-  const requiredPremium = useMemo(() => {
-    if (!stockPrice || !strikePrice || !desiredRoi) return null
-    return calcRequiredPremiumCC(stockPrice, strikePrice, desiredRoi)
-  }, [stockPrice, strikePrice, desiredRoi])
+  const requiredStrike = useMemo(() => {
+    if (!stockPrice || !premium || !desiredRoi) return null
+    return calcRequiredStrikeCSP(stockPrice, premium, desiredRoi)
+  }, [stockPrice, premium, desiredRoi])
 
-  const effectivePremium = requiredPremium || premium
-  const hasTarget = requiredPremium && desiredRoi
+  const effectiveStrike = requiredStrike || strikePrice
+  const hasTarget = requiredStrike && desiredRoi && premium
 
   const result = useMemo(() => {
-    if (!stockPrice || !strikePrice || !effectivePremium) return null
-    return calcCC({ stockPrice, strikePrice, premium: effectivePremium, dte, budget })
-  }, [stockPrice, strikePrice, effectivePremium, dte, budget])
+    if (!stockPrice || !effectiveStrike || !premium) return null
+    return calcCSP({ stockPrice, strikePrice: effectiveStrike, premium, dte, budget })
+  }, [stockPrice, effectiveStrike, premium, dte, budget])
 
   const assignedScenarios = useMemo(() => {
     if (!sp || !k || !pVal) return []
     
     return [
-      { label: 'Stock below strike', price: sp * 0.95, isAssigned: false },
+      { label: 'Below strike -20%', price: k * 0.80, isAssigned: true },
+      { label: 'Below strike -10%', price: k * 0.90, isAssigned: true },
       { label: 'At strike (K)', price: k, isAssigned: true },
-      { label: 'Above strike +5%', price: k * 1.05, isAssigned: true },
-      { label: 'Above strike +10%', price: k * 1.10, isAssigned: true },
-      { label: 'Above strike +20%', price: k * 1.20, isAssigned: true },
+      { label: 'Above strike +5%', price: k * 1.05, isAssigned: false },
+      { label: 'Above strike +10%', price: k * 1.10, isAssigned: false },
     ].map(s => ({
       ...s,
-      pl: s.isAssigned ? (s.price - sp + pVal) : pVal,
-      roi: s.isAssigned ? ((s.price - sp + pVal) / (sp - pVal) * 100) : (pVal / sp * 100)
+      pl: s.isAssigned ? (pVal - Math.max(0, k - s.price)) : pVal,
+      roi: s.isAssigned ? ((pVal - Math.max(0, k - s.price)) / (k - pVal) * 100) : (pVal / k * 100)
     }))
   }, [sp, k, pVal])
 
@@ -99,7 +98,7 @@ export default function CCPanel({ bp }) {
     }}>
       <div>
         <Card>
-          <Lbl style={{ marginBottom: 12, display: 'block', color: ACC, fontSize: 11 }}>Covered Call Strategy</Lbl>
+          <Lbl style={{ marginBottom: 12, display: 'block', color: ACC, fontSize: 11 }}>Cash Secured Put Strategy</Lbl>
           
           <NumField
             label="Stock Price"
@@ -108,16 +107,16 @@ export default function CCPanel({ bp }) {
             pre="$"
             step={0.01}
             ph="100.00"
-            help="Enter the current market price of the stock you want to trade."
+            help="Enter the current market price of the stock."
           />
           <NumField
-            label="Target Strike"
-            value={strikePrice}
-            onChange={setStrikePrice}
+            label="Premium Available"
+            value={premium}
+            onChange={setPremium}
             pre="$"
-            step={0.5}
-            ph="105.00"
-            help="The price at which you're willing to sell your shares if assigned. Usually set above current stock price."
+            step={0.01}
+            ph="2.50"
+            help="The premium you receive per share."
           />
           <NumField
             label="Desired ROI"
@@ -127,21 +126,18 @@ export default function CCPanel({ bp }) {
             step={1}
             ph="10"
             note="Your target return %"
-            help="The return percentage you want to earn. The calculator will show what premium you need to collect to hit this target."
+            help="The return percentage you want to earn."
           />
 
-          {requiredPremium && desiredRoi && (
+          {requiredStrike && desiredRoi && premium && (
             <div style={{ marginTop: 12 }}>
               <Card accent style={{ background: 'rgba(0,224,122,0.08)', border: '1px solid rgba(0,224,122,0.3)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontSize: 14 }}>🎯</span>
-                  <Lbl style={{ margin: 0 }}>Target Premium/Share</Lbl>
+                  <Lbl style={{ margin: 0 }}>Target Strike Price</Lbl>
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 700, color: ACC, marginTop: 2 }}>
-                  {fmtD(requiredPremium)}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
-                  {fmtD(requiredPremium * 100)} per contract
+                  {fmtD(requiredStrike)}
                 </div>
               </Card>
             </div>
@@ -150,41 +146,16 @@ export default function CCPanel({ bp }) {
           <Sep label="Optional" />
 
           <NumField
-            label="Actual Premium"
-            value={premium}
-            onChange={setPremium}
+            label="Strike Price"
+            value={strikePrice}
+            onChange={setStrikePrice}
             pre="$"
-            step={0.01}
-            ph="Enter actual"
-            note="Compare vs target"
-            help="Enter the actual premium quotes from your broker to compare against your target."
+            step={0.5}
+            ph="95.00"
+            note="Price willing to buy at"
+            help="The strike price for your put option."
           />
-          
-          {hasTarget && premium && parseFloat(premium) > 0 && (
-            <div style={{ marginTop: 10, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Actual vs Target</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{
-                      width: `${Math.min(100, (parseFloat(premium) / requiredPremium) * 100)}%`,
-                      height: '100%',
-                      background: parseFloat(premium) >= requiredPremium ? ACC : '#ffa050',
-                      transition: 'width 0.3s ease'
-                    }} />
-                  </div>
-                </div>
-                <span style={{ 
-                  fontSize: 12, 
-                  fontWeight: 700, 
-                  color: parseFloat(premium) >= requiredPremium ? ACC : '#ffa050' 
-                }}>
-                  {parseFloat(premium) >= requiredPremium ? '✓ Met' : `${fmtPct((parseFloat(premium) / requiredPremium) * 100)}`}
-                </span>
-              </div>
-            </div>
-          )}
-          
+
           <NumField
             label="Days to Expiration"
             value={dte}
@@ -192,7 +163,7 @@ export default function CCPanel({ bp }) {
             suf="DTE"
             step={1}
             ph="30"
-            help="Days until option expires. 30-45 days is typical for wheel strategy. Affects annualized yield calculations."
+            help="Days until option expires."
           />
           <NumField
             label="Budget"
@@ -201,7 +172,7 @@ export default function CCPanel({ bp }) {
             pre="$"
             step={1000}
             ph="optional"
-            help="Total capital available. Used to calculate how many contracts you can sell and any leftover cash."
+            help="Total capital for position sizing."
           />
 
           {result && (
@@ -221,14 +192,13 @@ export default function CCPanel({ bp }) {
               <div>
                 <Lbl style={{ color: 'rgba(255,255,255,0.5)' }}>Strategy Summary</Lbl>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-                  Sell {strikePrice && fmtD(strikePrice)} call on {stockPrice && fmtD(stockPrice)} stock
-                  {hasTarget && !premium && <span style={{ color: ACC, marginLeft: 8 }}>• Using target premium</span>}
+                  Sell {strikePrice && fmtD(strikePrice)} put on {stockPrice && fmtD(stockPrice)} stock
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Max Profit</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: ACC }}>{fmtD(result.maxProfit)}/sh</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: ACC }}>{fmtD(pVal)}/sh</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Breakeven</div>
@@ -243,7 +213,7 @@ export default function CCPanel({ bp }) {
         
         {!result ? (
           <div style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>
-            Enter stock price, strike, and desired ROI to see analysis
+            Enter stock price, premium, and desired ROI to see analysis
           </div>
         ) : (
           <>
@@ -252,9 +222,9 @@ export default function CCPanel({ bp }) {
               gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
               gap: 10
             }}>
-              <KV k="Premium/Share" v={fmtD(result.maxProfit)} accent big />
-              <KV k="Breakeven" v={fmtD(result.be)} sub={`${fmtPct(result.prot)} protection`} />
-              <KV k="Max Profit" v={fmtD(result.maxProfit)} />
+              <KV k="Premium/Share" v={fmtD(pVal)} accent big />
+              <KV k="Breakeven" v={fmtD(result.be)} sub={`${fmtPct(result.yieldPct)} yield`} />
+              <KV k="Cash Required" v={fmtD(result.cashPerCtr)} />
               <KV k="ROI if Assigned" v={fmtPct(result.roiAssigned)} />
               {result.annualized && <KV k="Ann. Yield" v={fmtPct(result.annualized)} />}
               {result.dailyTheta && <KV k="Daily Theta" v={fmtD(result.dailyTheta)} />}
@@ -270,7 +240,6 @@ export default function CCPanel({ bp }) {
                   price={s.price}
                   premium={pVal}
                   strike={k}
-                  stockPrice={sp}
                   isAssigned={s.isAssigned}
                 />
               ))}
@@ -285,10 +254,10 @@ export default function CCPanel({ bp }) {
                   gap: 10
                 }}>
                   <KV k="Contracts" v={result.bud.ctrs} accent big />
-                  <KV k="Shares Used" v={result.bud.sharesUsed} />
+                  <KV k="Cash Used" v={fmtD(result.bud.cashUsed)} />
                   <KV k="Cash Leftover" v={fmtD(result.bud.leftover)} warn={result.bud.leftover > 0} />
-                  <KV k="Capital Deployed" v={fmtD(result.bud.deployed)} />
                   <KV k="Premium Income" v={fmtD(result.bud.premTot)} accent />
+                  <KV k="Shares if Assigned" v={result.bud.sharesIf} />
                   <KV k="Cost Basis" v={fmtD(result.bud.costBasis)} />
                   {result.bud.annIncome && <KV k="Ann. Income" v={fmtPct(result.bud.annIncome)} />}
                 </div>
@@ -306,8 +275,8 @@ export default function CCPanel({ bp }) {
               <PayoffChart
                 sp={sp}
                 strike={k}
-                premium={parseFloat(effectivePremium) || 0}
-                type="cc"
+                premium={pVal}
+                type="csp"
               />
             </Card>
           </>

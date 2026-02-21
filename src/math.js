@@ -55,11 +55,13 @@ export function calcCC({ stockPrice, strikePrice, premium, dte, budget }) {
   }
 
   const be = sp - p
+  const costBasis = be
   const maxProfit = p + (k - sp)
+  const maxProfitPerShare = maxProfit
   const prot = (p / sp) * 100
   const otm = ((k - sp) / sp) * 100
   const yieldPct = (p / sp) * 100
-  const roiAssigned = (p + (k - sp)) / (sp - p) * 100
+  const roiAssigned = (maxProfit / costBasis) * 100
   const annualized = dteVal > 0 ? (p / sp) * (365 / dteVal) * 100 : null
   const dailyTheta = dteVal > 0 ? p / dteVal : null
 
@@ -67,8 +69,8 @@ export function calcCC({ stockPrice, strikePrice, premium, dte, budget }) {
   const scenarioLabels = ['−30%', '−20%', '−10%', '−5%', 'Flat', '+5%', 'Strike', '+10%', '+20%', '+30%']
 
   const scenarios = scenarioPrices.map((s, i) => {
-    const pl = Math.min(maxProfit, p + (s - sp))
-    const plPct = (pl / be) * 100
+    const pl = Math.min(maxProfitPerShare, p + (s - sp))
+    const plPct = (pl / costBasis) * 100
     return { label: scenarioLabels[i], price: s, pl, plPct }
   })
 
@@ -81,7 +83,8 @@ export function calcCC({ stockPrice, strikePrice, premium, dte, budget }) {
     const leftover = budgetVal - deployed
     const premTot = sharesUsed * p
     const premPerCtr = p * 100
-    const costBasis = be
+    const totalCostBasis = sharesUsed * costBasis
+    const totalPl = Math.min(sharesUsed * maxProfitPerShare, sharesUsed * p + (sharesUsed * (sp - sp)))
     const annIncome = dteVal > 0 ? (premTot * (365 / dteVal)) / deployed * 100 : null
 
     bud = {
@@ -91,13 +94,15 @@ export function calcCC({ stockPrice, strikePrice, premium, dte, budget }) {
       leftover,
       premTot,
       premPerCtr,
-      costBasis,
+      costBasis: totalCostBasis,
+      totalPl,
       annIncome
     }
   }
 
   return {
     be,
+    costBasis,
     maxProfit,
     prot,
     otm,

@@ -62,17 +62,17 @@ export default function PayoffChart({ sp, strike, premium, type }) {
 
         <line x1={pad.l} y1={zeroY} x2={W - pad.r} y2={zeroY} stroke="rgba(255,255,255,0.15)" strokeDasharray="4,3" />
 
-        <text x={pad.l - 6} y={pad.t + 10} fill="rgba(255,255,255,0.4)" fontSize={9} fontFamily="JetBrains Mono" textAnchor="end">{topLabel}</text>
-        <text x={pad.l - 6} y={zeroY + 3} fill="rgba(255,255,255,0.4)" fontSize={9} fontFamily="JetBrains Mono" textAnchor="end">$0</text>
+        <text x={pad.l - 6} y={pad.t + 10} fill="rgba(255,255,255,0.4)" fontSize={9} fontFamily="Poppins" textAnchor="end">{topLabel}</text>
+        <text x={pad.l - 6} y={zeroY + 3} fill="rgba(255,255,255,0.4)" fontSize={9} fontFamily="Poppins" textAnchor="end">$0</text>
 
         <line x1={mapX(strikeX)} y1={pad.t} x2={mapX(strikeX)} y2={H - pad.b} stroke="rgba(255,200,60,0.65)" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={mapX(strikeX)} y={H - 6} fill="rgba(255,200,60,0.7)" fontSize={8} fontFamily="JetBrains Mono" textAnchor="middle">K</text>
+        <text x={mapX(strikeX)} y={H - 6} fill="rgba(255,200,60,0.7)" fontSize={8} fontFamily="Poppins" textAnchor="middle">K</text>
 
         <line x1={mapX(spX)} y1={pad.t} x2={mapX(spX)} y2={H - pad.b} stroke="rgba(255,255,255,0.3)" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={mapX(spX)} y={H - 6} fill="rgba(255,255,255,0.35)" fontSize={8} fontFamily="JetBrains Mono" textAnchor="middle">S</text>
+        <text x={mapX(spX)} y={H - 6} fill="rgba(255,255,255,0.35)" fontSize={8} fontFamily="Poppins" textAnchor="middle">S</text>
 
         <line x1={mapX(beX)} y1={pad.t} x2={mapX(beX)} y2={H - pad.b} stroke="rgba(0,224,122,0.6)" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={mapX(beX)} y={H - 6} fill="rgba(0,224,122,0.65)" fontSize={8} fontFamily="JetBrains Mono" textAnchor="middle">BE</text>
+        <text x={mapX(beX)} y={H - 6} fill="rgba(0,224,122,0.65)" fontSize={8} fontFamily="Poppins" textAnchor="middle">BE</text>
       </svg>
     </div>
   )
