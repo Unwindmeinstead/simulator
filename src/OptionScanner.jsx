@@ -99,6 +99,8 @@ const fK = n => n >= 1000 ? (n / 1000).toFixed(1) + "K" : String(n ?? 0);
 
 const POPULAR_STOCKS = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'SPY', 'QQQ', 'COIN', 'PLTR', 'JPM', 'NFLX', 'DIS', 'AMAT', 'MU', 'INTC', 'CRM', 'ORCL'];
 
+const HUNT_STOCKS = ['AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'SPY', 'QQQ', 'COIN', 'PLTR', 'JPM', 'NFLX', 'DIS', 'AMAT', 'MU', 'INTC', 'CRM', 'ORCL', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'SOFI', 'UPST', 'SNAP', 'PLTR', 'SOFI', 'RBLX', 'SHOP', 'DOCU', 'ZM', 'CRWD', 'NET', 'DDOG', 'SNOW', 'OKTA', 'HUBS', 'TWLO', 'SQ', 'ROKU', 'PINS', 'SNAP', 'DISCA', 'VIAC', 'PARA', 'WBD', 'DIS', 'NFLX', 'CMCSA'];
+
 const getWatchlist = () => {
   try {
     const saved = localStorage.getItem('wheel_watchlist');
@@ -127,7 +129,10 @@ export default function OptionScanner() {
     minPremium: 0,
     strategy: "both",
     budget: 10000,
-    hasBid: false
+    hasBid: false,
+    huntMode: false,
+    huntMaxPrice: 15,
+    huntMinYield: 50
   });
 
   const setFilter = (key, value) => {
@@ -156,6 +161,9 @@ export default function OptionScanner() {
   };
 
   const getStocksToScan = () => {
+    if (filters.huntMode) {
+      return HUNT_STOCKS;
+    }
     if (filters.stockSource === "watchlist" && filters.watchlist?.length > 0) {
       return filters.watchlist;
     }
@@ -163,15 +171,16 @@ export default function OptionScanner() {
   };
 
   const getEffectiveFilters = () => ({
-    minDelta: filters.minDelta ?? 0.05,
-    maxDelta: filters.maxDelta ?? 0.50,
-    minDTE: filters.minDTE ?? 0,
-    maxDTE: filters.maxDTE ?? 999,
-    minROI: filters.minROI ?? 0,
-    maxStockPrice: filters.maxStockPrice ?? 99999,
-    minPremium: filters.minPremium ?? 0,
-    strategy: filters.strategy || "both",
-    hasBid: filters.hasBid ?? false
+    minDelta: filters.huntMode ? 0.05 : (filters.minDelta ?? 0.05),
+    maxDelta: filters.huntMode ? 0.50 : (filters.maxDelta ?? 0.50),
+    minDTE: filters.huntMode ? 7 : (filters.minDTE ?? 0),
+    maxDTE: filters.huntMode ? 45 : (filters.maxDTE ?? 999),
+    minROI: filters.huntMode ? filters.huntMinYield : (filters.minROI ?? 0),
+    maxStockPrice: filters.huntMode ? filters.huntMaxPrice : (filters.maxStockPrice ?? 99999),
+    minPremium: filters.huntMode ? 0 : (filters.minPremium ?? 0),
+    strategy: filters.huntMode ? "both" : (filters.strategy || "both"),
+    hasBid: filters.huntMode ? false : (filters.hasBid ?? false),
+    huntMode: filters.huntMode ?? false
   });
 
   const resetFilters = () => {
@@ -186,7 +195,10 @@ export default function OptionScanner() {
       minPremium: 0,
       strategy: "both",
       hasBid: false,
-      budget: 10000
+      budget: 10000,
+      huntMode: false,
+      huntMaxPrice: 15,
+      huntMinYield: 50
     }));
   };
 
@@ -422,8 +434,61 @@ export default function OptionScanner() {
                 {s.toUpperCase()}
               </button>
             ))}
+            <button
+              className={`sc-btn ${filters.huntMode ? "active" : ""}`}
+              onClick={() => setFilter("huntMode", !filters.huntMode)}
+              style={{ marginLeft: 8, borderColor: filters.huntMode ? "#ff5050" : undefined, color: filters.huntMode ? "#ff5050" : undefined }}
+            >
+              Hunt 🔥
+            </button>
           </div>
         </div>
+        
+        {/* Hunt Mode Filters */}
+        {filters.huntMode && (
+          <div style={{ padding: "8px 16px", borderBottom: "1px solid rgba(255,80,80,0.2)", background: "rgba(255,80,80,0.05)", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ fontSize: 10, color: "#ff5050", fontWeight: 600 }}>HUNT MODE:</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>Stock Under $</span>
+              <input
+                type="number"
+                value={filters.huntMaxPrice}
+                onChange={e => setFilter("huntMaxPrice", parseInt(e.target.value) || 15)}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,80,80,0.3)",
+                  borderRadius: 4,
+                  padding: "4px 6px",
+                  fontSize: 10,
+                  color: "#fff",
+                  width: 50,
+                  outline: "none"
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>Min DTE%</span>
+              <input
+                type="number"
+                value={filters.huntMinYield}
+                onChange={e => setFilter("huntMinYield", parseInt(e.target.value) || 50)}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,80,80,0.3)",
+                  borderRadius: 4,
+                  padding: "4px 6px",
+                  fontSize: 10,
+                  color: "#fff",
+                  width: 50,
+                  outline: "none"
+                }}
+              />
+            </div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
+              Finds cheap stocks with high premiums
+            </div>
+          </div>
+        )}
         
         {/* Watchlist stocks */}
         {filters.stockSource === "watchlist" && (
@@ -605,7 +670,7 @@ export default function OptionScanner() {
           <div>
             {/* DTE Range Label */}
             <div style={{ padding: "8px 12px", background: "rgba(0,255,136,0.08)", borderBottom: "1px solid rgba(0,255,136,0.15)", fontSize: 10, color: "#00ff88", fontWeight: 500 }}>
-              Targeting {filters.minDTE}-{filters.maxDTE} DTE with {filters.minROI}%+ yield
+              Targeting {filters.huntMode ? `Under $${filters.huntMaxPrice}` : `${filters.minDTE}-${filters.maxDTE} DTE`} with {filters.huntMode ? filters.huntMinYield : filters.minROI}%+ yield{filters.huntMode && " 🔥"}
             </div>
             {/* Header */}
             <div style={{ display: "flex", padding: "8px 12px", background: "rgba(0,0,0,0.5)", fontSize: 9, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", alignItems: "center" }}>
