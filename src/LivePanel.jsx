@@ -368,7 +368,7 @@ export default function LivePanel({ bp }) {
           </div>
         </Card>
 
-        {price !== null && (
+        {(price !== null || loading) && (
           <>
             <Card style={{ marginBottom: 16, padding: 20, minHeight: 400, position: 'relative', overflow: 'hidden' }}>
               <WheelChart
@@ -416,7 +416,7 @@ export default function LivePanel({ bp }) {
           </>
         )}
 
-        {price === null && !loading && (
+        {price === null && !loading && !ticker && (
           <Card>
             <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)' }}>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: 'rgba(255,255,255,0.5)' }}>Enter a stock symbol</div>

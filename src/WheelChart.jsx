@@ -141,18 +141,26 @@ export default function WheelChart({ chartData, isPositive, price, change, chang
   
   const hasData = prices.length > 0;
   
+  const chartHeight = 380;
+  
   if (!hasData && loading) {
     return (
-      <div ref={containerRef} style={{ width: '100%', height: 340, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>
-        {chartData ? 'Processing chart data...' : 'Loading chart...'}
+      <div ref={containerRef} style={{ width: '100%', height: chartHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', background: 'rgba(10,10,12,0.9)', borderRadius: 14 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Loading chart...</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{ticker}</div>
+        </div>
       </div>
     );
   }
   
   if (!hasData) {
     return (
-      <div ref={containerRef} style={{ width: '100%', height: 340, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>
-        Chart unavailable (API rate limited)
+      <div ref={containerRef} style={{ width: '100%', height: chartHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', background: 'rgba(10,10,12,0.9)', borderRadius: 14 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>No chart data</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{ticker}</div>
+        </div>
       </div>
     );
   }
