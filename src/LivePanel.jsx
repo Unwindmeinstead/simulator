@@ -220,7 +220,7 @@ export default function LivePanel({ bp }) {
 
   const handleSearch = (symbol) => {
     const s = (symbol || '').toUpperCase().trim()
-    if (s) { setTicker(s); setInput(s); loadData(s) }
+    if (s) { setTicker(s); setInput(s) }
   }
 
   const handleExpClick = (e) => {
@@ -312,7 +312,7 @@ export default function LivePanel({ bp }) {
               return (
                 <div 
                   key={sym}
-                  onClick={() => { setTicker(sym); setInput(sym); loadData(sym) }}
+                  onClick={() => { setTicker(sym); setInput(sym) }}
                   style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
