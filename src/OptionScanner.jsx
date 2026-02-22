@@ -431,7 +431,7 @@ export default function OptionScanner() {
                 className={`sc-btn ${filters.strategy === s ? "active" : ""}`}
                 onClick={() => toggleFilter("strategy", s, filters.strategy)}
               >
-                {s.toUpperCase()}
+                {s === "both" ? "ALL" : s.toUpperCase()}
               </button>
             ))}
             <button
