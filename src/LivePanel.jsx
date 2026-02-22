@@ -284,16 +284,16 @@ export default function LivePanel({ bp }) {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
-              <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: "'DM Mono', monospace" }}>{ticker}</span>
+              <span style={{ fontSize: 24, fontWeight: 700, color: '#ffffff', fontFamily: "'DM Mono', monospace", textShadow: '0 0 15px rgba(255,255,255,0.2)' }}>{ticker}</span>
               {connectionOk ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#00ff88', fontWeight: 600, background: 'rgba(0,255,136,0.1)', padding: '4px 10px', borderRadius: 20 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#00ff88' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#00ff88', fontWeight: 600, background: 'rgba(0,255,136,0.15)', padding: '4px 10px', borderRadius: 20, border: '1px solid rgba(0,255,136,0.3)' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#00ff88', boxShadow: '0 0 6px #00ff88' }} />
                   LIVE
                 </span>
               ) : (
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>OFFLINE</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>OFFLINE</span>
               )}
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: "'DM Mono', monospace" }}>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: "'DM Mono', monospace" }}>
                 {dataTime ? dataTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
               </span>
             </div>

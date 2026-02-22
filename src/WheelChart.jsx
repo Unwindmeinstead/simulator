@@ -209,32 +209,36 @@ export default function WheelChart({ chartData, isPositive, price, change, chang
           {ticker}
         </div>
         <div style={{ 
-          fontSize: 28, 
-          fontWeight: 300, 
+          fontSize: 36, 
+          fontWeight: 700, 
           fontFamily: "'DM Mono', monospace",
           letterSpacing: '-0.02em',
-          color: '#fff',
-          lineHeight: 1.1
+          color: '#ffffff',
+          lineHeight: 1.1,
+          textShadow: '0 0 20px rgba(255,255,255,0.3)',
         }}>
+
           ${displayPrice?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
         </div>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: 6, 
-          marginTop: 4
+          gap: 8, 
+          marginTop: 6
         }}>
           <span style={{
             color: isUp ? "#00ff88" : "#ff5050",
-            fontSize: 11,
+            fontSize: 14,
             fontFamily: "'DM Mono', monospace",
-            fontWeight: 500,
+            fontWeight: 600,
+            textShadow: isUp ? '0 0 10px rgba(0,255,136,0.4)' : '0 0 10px rgba(255,80,80,0.4)',
           }}>
             {isUp ? '+' : ''}{displayChange?.toFixed(2) || "0.00"} ({isUp ? '+' : ''}{displayChangePct?.toFixed(2) || "0.00"}%)
           </span>
           <span style={{
-            color: "rgba(255,255,255,0.25)",
-            fontSize: 10,
+            color: "rgba(255,255,255,0.35)",
+            fontSize: 11,
+            fontWeight: 500,
           }}>
             {TIMEFRAMES.find(t => t.label === chartRange)?.full}
           </span>
