@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { createChart, ColorType } from "lightweight-charts";
 
 const TIMEFRAMES = [
@@ -51,82 +51,94 @@ export default function WheelChart({ chartData, price, change, changePct, isPosi
   // Initialize chart once
   useEffect(() => {
     if (!chartContainerRef.current || initializedRef.current) return;
-    initializedRef.current = true;
 
     const container = chartContainerRef.current;
-    const w = container.clientWidth || 800;
-    const h = container.clientHeight || 300;
-
-    const chart = createChart(container, {
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: 'rgba(255,255,255,0.6)',
-      },
-      grid: {
-        vertLines: { color: 'rgba(255,255,255,0.03)' },
-        horzLines: { color: 'rgba(255,255,255,0.03)' },
-      },
-      width: w,
-      height: h,
-      rightPriceScale: {
-        borderColor: 'rgba(255,255,255,0.1)',
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-      },
-      timeScale: {
-        borderColor: 'rgba(255,255,255,0.1)',
-        timeVisible: true,
-        secondsVisible: false,
-      },
-      crosshair: {
-        mode: 0,
-        vertLine: {
-          color: 'rgba(255,255,255,0.2)',
-          width: 1,
-          style: 2,
-        },
-        horzLine: {
-          color: 'rgba(255,255,255,0.2)',
-          width: 1,
-          style: 2,
-        },
-      },
-    });
-
-    const areaSeries = chart.addAreaSeries({
-      lineColor: color,
-      topColor: areaTopColor,
-      bottomColor: areaBottomColor,
-      lineWidth: 2,
-      priceFormat: { type: 'custom', formatter: (p) => `$${p.toFixed(2)}` },
-      crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 4,
-    });
-
-    chartRef.current = chart;
-    seriesRef.current = areaSeries;
-
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
-        });
-      }
-    };
     
-    const resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-        seriesRef.current = null;
-        initializedRef.current = false;
+    const initChart = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      
+      if (w === 0 || h === 0) {
+        setTimeout(initChart, 100);
+        return;
       }
+
+      const chart = createChart(container, {
+        layout: {
+          background: { type: ColorType.Solid, color: 'transparent' },
+          textColor: 'rgba(255,255,255,0.6)',
+        },
+        grid: {
+          vertLines: { color: 'rgba(255,255,255,0.03)' },
+          horzLines: { color: 'rgba(255,255,255,0.03)' },
+        },
+        width: w,
+        height: h,
+        rightPriceScale: {
+          borderColor: 'rgba(255,255,255,0.1)',
+          scaleMargins: { top: 0.1, bottom: 0.1 },
+        },
+        timeScale: {
+          borderColor: 'rgba(255,255,255,0.1)',
+          timeVisible: true,
+          secondsVisible: false,
+        },
+        crosshair: {
+          mode: 0,
+          vertLine: {
+            color: 'rgba(255,255,255,0.2)',
+            width: 1,
+            style: 2,
+          },
+          horzLine: {
+            color: 'rgba(255,255,255,0.2)',
+            width: 1,
+            style: 2,
+          },
+        },
+      });
+
+      const areaSeries = chart.addAreaSeries({
+        lineColor: color,
+        topColor: areaTopColor,
+        bottomColor: areaBottomColor,
+        lineWidth: 2,
+        priceFormat: { type: 'custom', formatter: (p) => `$${p.toFixed(2)}` },
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 4,
+      });
+
+      chartRef.current = chart;
+      seriesRef.current = areaSeries;
+      initializedRef.current = true;
+
+      // Handle resize
+      const handleResize = () => {
+        if (chartContainerRef.current && chartRef.current) {
+          chartRef.current.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+          });
+        }
+      };
+      
+      const resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(container);
+
+      return () => {
+        resizeObserver.disconnect();
+        if (chartRef.current) {
+          chartRef.current.remove();
+          chartRef.current = null;
+          seriesRef.current = null;
+          initializedRef.current = false;
+        }
+      };
     };
+
+    // Small delay to ensure container is rendered
+    const timer = setTimeout(initChart, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Update data when chartData changes
