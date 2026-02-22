@@ -431,6 +431,71 @@ export default function LivePanel({ bp }) {
           </div>
         </Card>
 
+        {/* Horizontal Watchlist Bar */}
+        <Card style={{ marginBottom: 16, background: 'rgba(10,10,12,0.9)', padding: '10px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginRight: 4 }}>Watchlist:</span>
+            {watchlist.slice(0, 15).map(sym => {
+              const wData = watchlistData[sym]
+              const displayPrice = wData?.price
+              const displayChange = wData?.changePct
+              const wPositive = displayChange >= 0
+              return (
+                <div 
+                  key={sym}
+                  onClick={() => { setTicker(sym); setInput(sym); loadData(sym) }}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 6,
+                    padding: '4px 10px', 
+                    borderRadius: 6, 
+                    cursor: 'pointer', 
+                    background: sym === ticker ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.05)', 
+                    border: sym === ticker ? '1px solid rgba(0,255,136,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <span style={{ color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: "'DM Mono', monospace" }}>{sym}</span>
+                  {displayPrice && (
+                    <span style={{ color: wPositive ? '#00ff88' : '#ff5050', fontSize: 10, fontFamily: "'DM Mono', monospace" }}>
+                      ${displayPrice.toFixed(2)}
+                    </span>
+                  )}
+                  {displayChange !== undefined && (
+                    <span style={{ color: wPositive ? '#00ff88' : '#ff5050', fontSize: 9, fontFamily: "'DM Mono', monospace" }}>
+                      {wPositive ? '+' : ''}{displayChange.toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+            <input 
+              placeholder="+"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const val = e.target.value.trim().toUpperCase();
+                  if (val && !watchlist.includes(val)) {
+                    const updated = [...watchlist, val];
+                    setWatchlist(updated);
+                    localStorage.setItem('wheel_watchlist', JSON.stringify(updated));
+                    e.target.value = '';
+                  }
+                }
+              }}
+              style={{ 
+                width: 30,
+                background: 'rgba(255,255,255,0.04)', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                borderRadius: 4,
+                padding: '4px 6px',
+                color: '#fff',
+                fontSize: 11,
+                outline: 'none',
+              }} 
+            />
+          </div>
+        </Card>
+
         {price !== null && (
           <>
             <Card style={{ marginBottom: 16, padding: 20, minHeight: 400, position: 'relative', overflow: 'hidden' }}>

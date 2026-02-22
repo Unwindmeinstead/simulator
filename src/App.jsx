@@ -172,7 +172,9 @@ function App() {
         <div style={{ position: 'absolute', right: 32 }} />
       </header>
 
-      {!isDesktop && (
+      {/* Desktop-only app - mobile nav disabled */}
+
+      {false && (
         <div style={{
           position: 'fixed',
           bottom: 0,
@@ -425,8 +427,8 @@ function App() {
       <main style={{
         maxWidth: 1800,
         margin: '0 auto',
-        padding: isDesktop ? '32px' : '16px',
-        paddingBottom: isDesktop ? 40 : 80,
+        padding: '32px',
+        paddingBottom: 40,
         position: 'relative',
         zIndex: 1
       }}>
