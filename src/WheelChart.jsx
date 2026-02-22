@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 const TIMEFRAMES = [
   { label: "5m", full: "5 Minutes" },
@@ -11,17 +11,6 @@ const TIMEFRAMES = [
   { label: "1M", full: "1 Month" },
   { label: "3M", full: "3 Months" },
   { label: "1Y", full: "1 Year" },
-  { label: "5Y", full: "5 Years" },
-  { label: "ALL", full: "All Time" },
-];
-
-const EMA_PRESETS = [
-  { label: "EMA 9", period: 9, color: "#f59e0b" },
-  { label: "EMA 20", period: 20, color: "#06b6d4" },
-  { label: "EMA 50", period: 50, color: "#8b5cf6" },
-  { label: "EMA 200", period: 200, color: "#ec4899" },
-  { label: "SMA 50", period: 50, color: "#22c55e", isSMA: true },
-  { label: "SMA 200", period: 200, color: "#ef4444", isSMA: true },
 ];
 
 function downsample(arr, n) {
@@ -50,115 +39,205 @@ function calculateEMA(data, period) {
   return ema;
 }
 
-function calculateSMA(data, period) {
-  if (!data || data.length < period) return [];
-  const sma = [];
-  for (let i = 0; i < data.length; i++) {
-    if (i < period - 1) {
-      sma.push(null);
-    } else {
-      const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
-      sma.push(sum / period);
-    }
-  }
-  return sma;
-}
-
-import PlugChart from "./PlugChart";
-
-export default function WheelChart({ chartData, isPositive, price, change, changePct, chartRange, setChartRange, ticker = "AAPL" }) {
+export default function WheelChart({ chartData, price, change, changePct, isPositive, chartRange, setChartRange, ticker = "AAPL" }) {
   const containerRef = useRef(null);
-  const [dims, setDims] = useState({ w: 600, h: 280 });
-  const [hoverData, setHoverData] = useState([]);
-  const [emaSettings, setEmaSettings] = useState([{ period: 9, color: "#f59e0b", enabled: true }]);
-
+  const canvasRef = useRef(null);
+  const overlayRef = useRef(null);
+  const [dims, setDims] = useState({ w: 800, h: 300 });
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const [animProgress, setAnimProgress] = useState(1);
+  const animationRef = useRef(null);
+  const pulseRef = useRef(0);
+  
   const prices = useMemo(() => {
     const arr = chartData?.map(d => d.close).filter(Boolean) || [];
-    return downsample(arr, 600);
+    return downsample(arr, 400);
   }, [chartData]);
 
-  const displayPrice = hoverData?.[0]?.price ?? price ?? 0;
-  const displayChange = displayPrice - (prices[0] || price || 0);
-  const displayChangePct = prices[0] ? (displayChange / prices[0]) * 100 : 0;
-  const isUp = displayChange >= 0;
+  const openPrice = prices[0] || price || 0;
+  const currentPrice = price || 0;
+  const isUp = currentPrice >= openPrice;
+  
+  const color = isUp ? '#00c805' : '#ff5000';
+  const rgb = isUp ? '0,200,5' : '255,80,0';
+  
+  const displayPrice = hoverIdx !== null ? prices[hoverIdx] : currentPrice;
+  const displayChange = displayPrice - openPrice;
+  const displayChangePct = openPrice ? (displayChange / openPrice) * 100 : 0;
+  const displayIsUp = displayChange >= 0;
 
-  const emaLines = useMemo(() => {
-    return emaSettings.filter(e => e.enabled).map(setting => {
-      const data = setting.isSMA 
-        ? calculateSMA(prices, setting.period)
-        : calculateEMA(prices, setting.period);
-      return {
-        data,
-        color: setting.color,
-        label: setting.label,
-      };
-    });
-  }, [prices, emaSettings]);
-
-  const toggleEma = (period, color, isSMA) => {
-    setEmaSettings(prev => {
-      const exists = prev.find(e => e.period === period && e.isSMA === isSMA);
-      if (exists) {
-        return prev.filter(e => e.period !== period || e.isSMA !== isSMA);
-      }
-      return [...prev, { period, color, enabled: true, isSMA }];
-    });
-  };
-
+  // Resize observer
   useEffect(() => {
-    if (!containerRef.current) {
-      const timer = setTimeout(() => {
-        setDims({ w: 700, h: 320 });
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-    
     const ro = new ResizeObserver(entries => {
       if (!entries[0]) return;
       const w = Math.floor(entries[0].contentRect.width);
-      const h = Math.min(420, Math.max(280, Math.floor(w * 0.45)));
+      const h = Math.floor(w * 0.38);
       setDims({ w, h });
     });
-    
-    try {
-      ro.observe(containerRef.current);
-    } catch (e) {
-      setDims({ w: 700, h: 340 });
-    }
+    if (containerRef.current) ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, []);
 
-  const [loading, setLoading] = useState(true);
-  
+  // Entry animation on data change
   useEffect(() => {
-    if (chartData?.length > 0) {
-      setLoading(false);
-    } else if (chartData) {
-      const timer = setTimeout(() => setLoading(false), 5000);
-      return () => clearTimeout(timer);
+    if (!prices.length) return;
+    
+    setAnimProgress(0);
+    const start = performance.now();
+    const duration = 700;
+    
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setAnimProgress(eased);
+      
+      if (t < 1) {
+        animationRef.current = requestAnimationFrame(tick);
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [prices.length, ticker]);
+
+  // Live dot pulse animation
+  useEffect(() => {
+    const tick = () => {
+      pulseRef.current = (Date.now() % 2000) / 2000;
+      drawChart();
+      animationRef.current = requestAnimationFrame(tick);
+    };
+    animationRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [prices.length, hoverIdx, dims.w, dims.h]);
+
+  const drawChart = useCallback(() => {
+    const canvas = canvasRef.current;
+    const overlay = overlayRef.current;
+    if (!canvas || !overlay) return;
+    
+    const ctx = canvas.getContext('2d');
+    const octx = overlay.getContext('2d');
+    const { w, h } = dims;
+    
+    if (w === 0 || h === 0 || !prices.length) return;
+    
+    const PAD_TOP = 20;
+    const PAD_BOTTOM = 30;
+    const chartHeight = h - PAD_TOP - PAD_BOTTOM;
+    
+    // Calculate min/max for scaling
+    const min = Math.min(...prices) * 0.995;
+    const max = Math.max(...prices) * 1.005;
+    const range = max - min || 1;
+    
+    const xOf = (i) => (i / (prices.length - 1)) * w;
+    const yOf = (v) => PAD_TOP + chartHeight - ((v - min) / range) * chartHeight;
+    
+    const currentIdx = prices.length - 1;
+    const lx = xOf(currentIdx);
+    const ly = yOf(prices[currentIdx]);
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, w, h);
+    
+    // Pass 1: Gradient fill
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, `rgba(${rgb}, 0.15)`);
+    grad.addColorStop(0.5, `rgba(${rgb}, 0.04)`);
+    grad.addColorStop(1, `rgba(${rgb}, 0)`);
+    
+    const drawCount = Math.floor(animProgress * (prices.length - 1));
+    
+    ctx.beginPath();
+    prices.slice(0, drawCount + 1).forEach((v, i) => {
+      const x = xOf(i), y = yOf(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(xOf(drawCount), h - PAD_BOTTOM);
+    ctx.lineTo(0, h - PAD_BOTTOM);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    
+    // Pass 2: The line
+    ctx.beginPath();
+    prices.slice(0, drawCount + 1).forEach((v, i) => {
+      const x = xOf(i), y = yOf(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.75;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    
+    // Pass 3: Live dot pulse
+    if (animProgress >= 1) {
+      const pulse = pulseRef.current;
+      
+      // Expanding ring
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3.5 + pulse * 8, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${rgb}, ${0.5 * (1 - pulse)})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Solid center dot
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
     }
-  }, [chartData]);
-  
-  const hasData = prices.length > 0;
-  
+    
+    // Draw crosshair on overlay
+    octx.clearRect(0, 0, w, h);
+    
+    if (hoverIdx !== null && hoverIdx < prices.length) {
+      const hx = xOf(hoverIdx);
+      const hy = yOf(prices[hoverIdx]);
+      
+      // Vertical dashed line
+      octx.setLineDash([4, 4]);
+      octx.strokeStyle = 'rgba(255,255,255,0.15)';
+      octx.lineWidth = 1;
+      octx.beginPath();
+      octx.moveTo(hx, 0);
+      octx.lineTo(hx, h);
+      octx.stroke();
+      octx.setLineDash([]);
+      
+      // White dot at data point
+      octx.beginPath();
+      octx.arc(hx, hy, 5, 0, Math.PI * 2);
+      octx.fillStyle = '#fff';
+      octx.fill();
+    }
+  }, [prices, dims, color, rgb, animProgress, hoverIdx]);
+
+  const handleMouseMove = (e) => {
+    const rect = overlayRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mx = e.clientX - rect.left;
+    const idx = Math.round((mx / dims.w) * (prices.length - 1));
+    setHoverIdx(Math.max(0, Math.min(prices.length - 1, idx)));
+  };
+
+  const handleMouseLeave = () => {
+    setHoverIdx(null);
+  };
+
   const chartHeight = 380;
-  
-  if (!hasData && loading) {
+
+  if (!prices.length) {
     return (
       <div ref={containerRef} style={{ width: '100%', height: chartHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', background: 'rgba(10,10,12,0.9)', borderRadius: 14 }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Loading chart...</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{ticker}</div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!hasData) {
-    return (
-      <div ref={containerRef} style={{ width: '100%', height: chartHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', background: 'rgba(10,10,12,0.9)', borderRadius: 14 }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>No chart data</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Loading chart...</div>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{ticker}</div>
         </div>
       </div>
@@ -166,143 +245,69 @@ export default function WheelChart({ chartData, isPositive, price, change, chang
   }
 
   return (
-    <div ref={containerRef} style={{ width: '100%', position: 'relative' }}>
-      <style>{`
-        .tf-btn {
-          background: none;
-          border: none;
-          color: rgba(255,255,255,0.4);
-          font-size: 12px;
-          font-weight: 500;
-          font-family: inherit;
-          padding: 5px 10px;
-          border-radius: 16px;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        .tf-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); }
-        .tf-btn.active { color: #fff; background: rgba(255,255,255,0.1); }
-        .ema-btn {
-          background: transparent;
-          border: 1px solid;
-          font-size: 11px;
-          font-weight: 500;
-          font-family: 'DM Mono', monospace;
-          padding: 4px 10px;
-          border-radius: 14px;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          opacity: 0.7;
-        }
-        .ema-btn:hover { opacity: 1; }
-        .ema-btn.active { opacity: 1; }
-      `}</style>
+    <div ref={containerRef} style={{ width: '100%', height: chartHeight, position: 'relative', background: 'rgba(10,10,12,0.9)', borderRadius: 14, overflow: 'hidden' }}>
+      {/* Base canvas - chart */}
+      <canvas
+        ref={canvasRef}
+        width={dims.w}
+        height={chartHeight}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+      />
+      {/* Overlay canvas - crosshair */}
+      <canvas
+        ref={overlayRef}
+        width={dims.w}
+        height={chartHeight}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: 'crosshair' }}
+      />
       
-      {/* Stock Info Overlay - Top Left */}
-      <div style={{ 
-        position: 'absolute', 
-        top: -2, 
-        left: 12, 
-        zIndex: 10,
-        pointerEvents: 'none'
-      }}>
-        <div style={{ 
-          fontSize: 12, 
-          fontWeight: 600, 
-          color: 'rgba(255,255,255,0.4)',
-          letterSpacing: '0.08em',
-          marginBottom: 1,
-          textTransform: 'uppercase'
-        }}>
-          {ticker}
-        </div>
+      {/* Price display - top left */}
+      <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
         <div style={{ 
           fontSize: 36, 
           fontWeight: 700, 
           fontFamily: "'DM Mono', monospace",
-          letterSpacing: '-0.02em',
           color: '#ffffff',
-          lineHeight: 1.1,
-          textShadow: '0 0 20px rgba(255,255,255,0.3)',
+          textShadow: '0 0 20px rgba(255,255,255,0.25)',
         }}>
-
           ${displayPrice?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
         </div>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 8, 
-          marginTop: 6
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
           <span style={{
-            color: isUp ? "#00ff88" : "#ff5050",
+            color: displayIsUp ? "#00c805" : "#ff5000",
             fontSize: 14,
             fontFamily: "'DM Mono', monospace",
             fontWeight: 600,
-            textShadow: isUp ? '0 0 10px rgba(0,255,136,0.4)' : '0 0 10px rgba(255,80,80,0.4)',
+            textShadow: displayIsUp ? '0 0 10px rgba(0,200,5,0.4)' : '0 0 10px rgba(255,80,0,0.4)',
           }}>
-            {isUp ? '+' : ''}{displayChange?.toFixed(2) || "0.00"} ({isUp ? '+' : ''}{displayChangePct?.toFixed(2) || "0.00"}%)
-          </span>
-          <span style={{
-            color: "rgba(255,255,255,0.35)",
-            fontSize: 11,
-            fontWeight: 500,
-          }}>
-            {TIMEFRAMES.find(t => t.label === chartRange)?.full}
+            {displayIsUp ? '+' : ''}{displayChange?.toFixed(2) || "0.00"} ({displayIsUp ? '+' : ''}{displayChangePct?.toFixed(2) || "0.00"}%)
           </span>
         </div>
       </div>
-
-      {/* EMA Settings - Top Center */}
-      <div style={{ 
-        position: 'absolute', 
-        top: -2, 
-        left: '50%', 
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        gap: 4,
-        background: 'rgba(0,0,0,0.4)',
-        padding: '4px 8px',
-        borderRadius: 20,
-        backdropFilter: 'blur(8px)',
-      }}>
-        {EMA_PRESETS.map(preset => {
-          const isActive = emaSettings.some(e => e.period === preset.period && e.isSMA === preset.isSMA);
-          return (
-            <button
-              key={preset.label}
-              className={`ema-btn ${isActive ? 'active' : ''}`}
-              onClick={() => toggleEma(preset.period, preset.color, preset.isSMA)}
-              style={{
-                borderColor: isActive ? preset.color : 'rgba(255,255,255,0.15)',
-                color: isActive ? preset.color : 'rgba(255,255,255,0.4)',
-                background: isActive ? `${preset.color}15` : 'transparent',
-              }}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <PlugChart
-          prices={prices}
-          isUp={isPositive}
-          width={dims.w}
-          height={dims.h - 80}
-          onHover={setHoverData}
-          emaLines={emaLines}
-        />
-      </div>
-      <div style={{ display: "flex", gap: 2, marginTop: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {TIMEFRAMES.map(t => (
+      
+      {/* Timeframe selector - top right */}
+      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 2, zIndex: 10, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 200 }}>
+        {TIMEFRAMES.slice(0, 6).map(tf => (
           <button
-            key={t.label}
-            className={`tf-btn${chartRange === t.label ? " active" : ""}`}
-            onClick={() => setChartRange(t.label)}
-          >{t.label}</button>
+            key={tf.label}
+            onClick={() => setChartRange(tf.label)}
+            style={{
+              background: chartRange === tf.label ? 'rgba(255,255,255,0.15)' : 'transparent',
+              border: 'none',
+              borderRadius: 4,
+              padding: '4px 8px',
+              color: chartRange === tf.label ? '#fff' : 'rgba(255,255,255,0.35)',
+              fontSize: 10,
+              fontWeight: chartRange === tf.label ? 600 : 400,
+              cursor: 'pointer',
+              fontFamily: 'DM Sans, sans-serif',
+              transition: 'all 0.15s',
+            }}
+          >
+            {tf.label}
+          </button>
         ))}
       </div>
     </div>
