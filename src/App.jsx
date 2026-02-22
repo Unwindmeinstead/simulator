@@ -53,14 +53,6 @@ function App() {
             letterSpacing: -2,
             lineHeight: 1
           }}>S</span>
-          <span style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.6)',
-            fontFamily: 'Poppins',
-            letterSpacing: 0.5,
-            marginTop: 2
-          }}>trategy</span>
         </div>
 
         <div style={{ display: 'flex', gap: 6 }}>
