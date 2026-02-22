@@ -302,9 +302,9 @@ export default function LivePanel({ bp }) {
 
         {/* Horizontal Watchlist Bar */}
         <Card style={{ marginBottom: 16, background: 'rgba(10,10,12,0.9)', padding: '10px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginRight: 4 }}>Watchlist:</span>
-            {watchlist.slice(0, 15).map(sym => {
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Watchlist:</span>
+            {watchlist.map(sym => {
               const wData = watchlistData[sym]
               const displayPrice = wData?.price
               const displayChange = wData?.changePct
@@ -322,6 +322,7 @@ export default function LivePanel({ bp }) {
                     cursor: 'pointer', 
                     background: sym === ticker ? 'rgba(0,255,136,0.15)' : 'rgba(255,255,255,0.05)', 
                     border: sym === ticker ? '1px solid rgba(0,255,136,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   <span style={{ color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: "'DM Mono', monospace" }}>{sym}</span>
@@ -353,6 +354,7 @@ export default function LivePanel({ bp }) {
               }}
               style={{ 
                 width: 30,
+                minWidth: 30,
                 background: 'rgba(255,255,255,0.04)', 
                 border: '1px solid rgba(255,255,255,0.08)', 
                 borderRadius: 4,
@@ -360,6 +362,7 @@ export default function LivePanel({ bp }) {
                 color: '#fff',
                 fontSize: 11,
                 outline: 'none',
+                whiteSpace: 'nowrap',
               }} 
             />
           </div>
