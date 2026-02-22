@@ -55,108 +55,75 @@ function App() {
           }}>S</span>
         </div>
 
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 4 }}>
           <button onClick={() => setTab('cc')} style={{
-            background: tab === 'cc' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: tab === 'cc' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: tab === 'cc' ? '#fff' : 'rgba(255,255,255,0.5)',
+            borderRadius: 6,
+            padding: '8px 14px',
+            color: tab === 'cc' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: tab === 'cc' ? 600 : 400,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Poppins',
-            transition: 'all 0.2s'
+            fontFamily: 'DM Sans, sans-serif',
+            transition: 'all 0.15s'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 19V5M5 12l7-7 7 7" />
-            </svg>
             Call
           </button>
           <button onClick={() => setTab('csp')} style={{
-            background: tab === 'csp' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: tab === 'csp' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: tab === 'csp' ? '#fff' : 'rgba(255,255,255,0.5)',
+            borderRadius: 6,
+            padding: '8px 14px',
+            color: tab === 'csp' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: tab === 'csp' ? 600 : 400,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Poppins',
-            transition: 'all 0.2s'
+            fontFamily: 'DM Sans, sans-serif',
+            transition: 'all 0.15s'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12l7 7 7-7" />
-            </svg>
             Put
           </button>
           <button onClick={() => setTab('wheel')} style={{
-            background: tab === 'wheel' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: tab === 'wheel' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: tab === 'wheel' ? '#fff' : 'rgba(255,255,255,0.5)',
+            borderRadius: 6,
+            padding: '8px 14px',
+            color: tab === 'wheel' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: tab === 'wheel' ? 600 : 400,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Poppins',
-            transition: 'all 0.2s'
+            fontFamily: 'DM Sans, sans-serif',
+            transition: 'all 0.15s'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-            </svg>
             S
           </button>
           <button onClick={() => setTab('live')} style={{
-            background: tab === 'live' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: tab === 'live' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: tab === 'live' ? '#fff' : 'rgba(255,255,255,0.5)',
+            borderRadius: 6,
+            padding: '8px 14px',
+            color: tab === 'live' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: tab === 'live' ? 600 : 400,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Poppins',
-            transition: 'all 0.2s'
+            fontFamily: 'DM Sans, sans-serif',
+            transition: 'all 0.15s'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
             Live
           </button>
           <button onClick={() => setTab('manual')} style={{
-            background: tab === 'manual' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: tab === 'manual' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            color: tab === 'manual' ? '#fff' : 'rgba(255,255,255,0.5)',
+            borderRadius: 6,
+            padding: '8px 14px',
+            color: tab === 'manual' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: tab === 'manual' ? 600 : 400,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Poppins',
-            transition: 'all 0.2s'
+            fontFamily: 'DM Sans, sans-serif',
+            transition: 'all 0.15s'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
             Manual
           </button>
         </div>
