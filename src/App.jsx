@@ -13,7 +13,7 @@ function App() {
 
   const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
 
-  const tabName = tab === 'cc' ? 'Call' : tab === 'csp' ? 'Put' : tab === 'manual' ? 'Manual' : tab === 'live' ? 'Live' : 'Strategy'
+  const tabName = tab === 'cc' ? 'Call' : tab === 'csp' ? 'Put' : tab === 'manual' ? 'Manual' : tab === 'live' ? 'Live' : 'S'
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', background: '#000000' }}>
@@ -323,7 +323,7 @@ function App() {
                 <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
               </svg>
             </div>
-            <span style={{ marginTop: 4, fontWeight: 500 }}>Strategy</span>
+            <span style={{ marginTop: 4, fontWeight: 500 }}>S</span>
           </button>
           <button
             onClick={() => setTab('manual')}
