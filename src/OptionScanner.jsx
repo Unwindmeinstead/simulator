@@ -381,9 +381,9 @@ export default function OptionScanner() {
           background: transparent;
           border: 1px solid rgba(255,255,255,0.15);
           color: rgba(255,255,255,0.5);
-          font-size: 10px;
-          padding: 4px 8px;
-          border-radius: 4px;
+          font-size: 12px;
+          padding: 8px 12px;
+          border-radius: 6px;
           cursor: pointer;
           transition: all 0.15s;
         }
@@ -393,9 +393,9 @@ export default function OptionScanner() {
           background: #00ff88;
           border: none;
           color: #000;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
-          padding: 8px 20px;
+          padding: 12px 28px;
           border-radius: 6px;
           cursor: pointer;
         }
@@ -551,11 +551,11 @@ export default function OptionScanner() {
         )}
         
         {/* Filters */}
-        <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
           {/* Delta */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Delta</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Delta</div>
+            <div style={{ display: "flex", gap: 4 }}>
               {[0.10, 0.15, 0.20, 0.25, 0.30].map(v => (
                 <button key={v} className={`sc-btn ${filters.minDelta === v ? "active" : ""}`} onClick={() => toggleFilter("minDelta", v, filters.minDelta)}>
                   {v}
@@ -566,8 +566,8 @@ export default function OptionScanner() {
           
           {/* DTE */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>DTE</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>DTE</div>
+            <div style={{ display: "flex", gap: 4 }}>
               {[7, 14, 21, 30, 45, 60, 90].map(v => (
                 <button key={v} className={`sc-btn ${filters.maxDTE === v ? "active" : ""}`} onClick={() => toggleFilter("maxDTE", v, filters.maxDTE)}>
                   {v}d
@@ -578,8 +578,8 @@ export default function OptionScanner() {
           
           {/* ROI */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Min DTE %</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Min DTE %</div>
+            <div style={{ display: "flex", gap: 4 }}>
               {[5, 10, 15, 20, 30, 50].map(v => (
                 <button key={v} className={`sc-btn ${filters.minROI === v ? "active" : ""}`} onClick={() => toggleFilter("minROI", v, filters.minROI)}>
                   {v}%
@@ -590,8 +590,8 @@ export default function OptionScanner() {
           
           {/* Stock Price */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Stock Under</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Stock Under</div>
+            <div style={{ display: "flex", gap: 4 }}>
               {[10, 20, 50, 100, 200, 500, 1000].map(v => (
                 <button key={v} className={`sc-btn ${filters.maxStockPrice === v ? "active" : ""}`} onClick={() => toggleFilter("maxStockPrice", v, filters.maxStockPrice)}>
                   ${v}
@@ -602,8 +602,8 @@ export default function OptionScanner() {
 
           {/* Has Bid */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Require</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Require</div>
+            <div style={{ display: "flex", gap: 4 }}>
               <button 
                 className={`sc-btn ${filters.hasBid ? "active" : ""}`} 
                 onClick={() => setFilter("hasBid", !filters.hasBid)}
@@ -615,8 +615,8 @@ export default function OptionScanner() {
           
           {/* Min Premium */}
           <div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Min Prem</div>
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Min Prem</div>
+            <div style={{ display: "flex", gap: 4 }}>
               {[0, 0.50, 1.00, 2.00, 5.00].map(v => (
                 <button key={v} className={`sc-btn ${filters.minPremium === v ? "active" : ""}`} onClick={() => toggleFilter("minPremium", v, filters.minPremium)}>
                   ${v.toFixed(2)}
@@ -626,8 +626,8 @@ export default function OptionScanner() {
           </div>
           
           {/* Budget */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Budget $</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Budget $</div>
             <input
               type="number"
               value={filters.budget}
@@ -635,11 +635,11 @@ export default function OptionScanner() {
               style={{
                 background: "rgba(255,255,255,0.05)",
                 border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 4,
-                padding: "4px 8px",
-                fontSize: 10,
+                borderRadius: 6,
+                padding: "8px 12px",
+                fontSize: 12,
                 color: "#fff",
-                width: 70,
+                width: 80,
                 outline: "none"
               }}
             />

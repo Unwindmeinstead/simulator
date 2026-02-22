@@ -13,7 +13,7 @@ function App() {
 
   const isDesktop = bp === 'md' || bp === 'lg' || bp === 'xl'
 
-  const tabName = tab === 'cc' ? 'Call' : tab === 'csp' ? 'Put' : tab === 'manual' ? 'Manual' : tab === 'live' ? 'Live' : 'S'
+  const tabName = tab === 'cc' ? 'Call' : tab === 'csp' ? 'Put' : tab === 'strategy' ? 'Strategy' : tab === 'manual' ? 'Manual' : tab === 'live' ? 'Live' : 'S'
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', background: '#000000' }}>
@@ -84,14 +84,14 @@ function App() {
           }}>
             Put
           </button>
-          <button onClick={() => setTab('wheel')} style={{
-            background: tab === 'wheel' ? 'rgba(255,255,255,0.1)' : 'transparent',
+          <button onClick={() => setTab('strategy')} style={{
+            background: tab === 'strategy' ? 'rgba(255,255,255,0.1)' : 'transparent',
             border: 'none',
             borderRadius: 6,
             padding: '8px 14px',
-            color: tab === 'wheel' ? '#fff' : 'rgba(255,255,255,0.45)',
+            color: tab === 'strategy' ? '#fff' : 'rgba(255,255,255,0.45)',
             fontSize: 12,
-            fontWeight: tab === 'wheel' ? 600 : 400,
+            fontWeight: tab === 'strategy' ? 600 : 400,
             cursor: 'pointer',
             fontFamily: 'DM Sans, sans-serif',
             transition: 'all 0.15s'
@@ -238,7 +238,7 @@ function App() {
             <span style={{ marginTop: 4, fontWeight: 500 }}>Put</span>
           </button>
           <button
-            onClick={() => setTab('wheel')}
+            onClick={() => setTab('strategy')}
             style={{
               flex: 1,
               display: 'flex',
@@ -248,14 +248,14 @@ function App() {
               gap: 2,
               background: 'transparent',
               border: 'none',
-              color: tab === 'wheel' ? ACC : 'rgba(255,255,255,0.5)',
+              color: tab === 'strategy' ? ACC : 'rgba(255,255,255,0.5)',
               fontSize: 9,
               fontFamily: 'Poppins',
               cursor: 'pointer',
               position: 'relative'
             }}
           >
-            {tab === 'wheel' && (
+            {tab === 'strategy' && (
               <div style={{
                 position: 'absolute',
                 top: 0,
@@ -270,14 +270,14 @@ function App() {
               width: 32,
               height: 32,
               borderRadius: 10,
-              background: tab === 'wheel' ? 'rgba(0,255,136,0.12)' : 'rgba(255,255,255,0.05)',
+              background: tab === 'strategy' ? 'rgba(0,255,136,0.12)' : 'rgba(255,255,255,0.05)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: `1px solid ${tab === 'wheel' ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              border: `1px solid ${tab === 'strategy' ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.1)'}`,
               transition: 'all 0.2s ease'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tab === 'wheel' ? ACC : 'rgba(255,255,255,0.5)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tab === 'strategy' ? ACC : 'rgba(255,255,255,0.5)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
               </svg>
@@ -391,7 +391,7 @@ function App() {
         position: 'relative',
         zIndex: 1
       }}>
-        {tab === 'wheel' && <WheelPanel key="wheel" bp={bp} />}
+        {tab === 'strategy' && <WheelPanel key="strategy" bp={bp} />}
         {tab === 'cc' && <CCPanel key="cc" bp={bp} />}
         {tab === 'csp' && <CSPanel key="csp" bp={bp} />}
         {tab === 'manual' && <ManualPanel key="manual" bp={bp} />}

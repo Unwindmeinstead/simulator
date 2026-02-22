@@ -68,7 +68,7 @@ export default function LivePanel({ bp }) {
   const [ticker, setTicker] = useState(initialWatchlist[0] || 'AAPL')
   const [input, setInput] = useState(initialWatchlist[0] || 'AAPL')
   const [loading, setLoading] = useState(true)
-  const [chartRange, setChartRange] = useState('1MO')
+  const [chartRange, setChartRange] = useState('1M')
   const [watchlist, setWatchlist] = useState(initialWatchlist)
   const [watchlistData, setWatchlistData] = useState({})
   const [connectionOk, setConnectionOk] = useState(true)
@@ -142,7 +142,19 @@ export default function LivePanel({ bp }) {
         setPrice(quote.regularMarketPrice)
         setChange(quote.regularMarketChange || 0)
         setChangePct(quote.regularMarketChangePercent || 0)
-        setStats({ open: quote.regularMarketOpen, high: quote.regularMarketDayHigh, low: quote.regularMarketDayLow, prevClose: quote.chartPreviousClose || quote.regularMarketPreviousClose, volume: quote.regularMarketVolume, peRatio: quote.forwardPE })
+        setStats({ 
+          open: quote.regularMarketOpen, 
+          high: quote.regularMarketDayHigh, 
+          low: quote.regularMarketDayLow, 
+          prevClose: quote.chartPreviousClose || quote.regularMarketPreviousClose, 
+          volume: quote.regularMarketVolume, 
+          peRatio: quote.forwardPE,
+          sharesOutstanding: quote.sharesOutstanding,
+          fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+          fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+          floatShares: quote.floatShares,
+          earningsDate: quote.earningsCalendar,
+        })
         setChartData(chart?.chart || [])
         setDataTime(new Date())
         setConnectionOk(true)
@@ -304,6 +316,36 @@ export default function LivePanel({ bp }) {
         <Card style={{ marginBottom: 16, background: 'rgba(10,10,12,0.9)', padding: '10px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', marginRight: 4, whiteSpace: 'nowrap' }}>Watchlist:</span>
+            <input 
+              placeholder="+"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const val = e.target.value.trim().toUpperCase();
+                  if (val && !watchlist.includes(val)) {
+                    const updated = [val, ...watchlist];
+                    setWatchlist(updated);
+                    localStorage.setItem('wheel_watchlist', JSON.stringify(updated));
+                    e.target.value = '';
+                  }
+                }
+              }}
+              style={{ 
+                width: 36,
+                minWidth: 36,
+                height: 28,
+                background: 'rgba(0,255,136,0.1)', 
+                border: '1px solid rgba(0,255,136,0.25)', 
+                borderRadius: 6,
+                padding: '4px 8px',
+                color: '#00ff88',
+                fontSize: 12,
+                fontWeight: 600,
+                outline: 'none',
+                whiteSpace: 'nowrap',
+                textAlign: 'center',
+                cursor: 'pointer',
+              }} 
+            />
             {watchlist.map(sym => {
               const wData = watchlistData[sym]
               const displayPrice = wData?.price
@@ -339,32 +381,6 @@ export default function LivePanel({ bp }) {
                 </div>
               )
             })}
-            <input 
-              placeholder="+"
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  const val = e.target.value.trim().toUpperCase();
-                  if (val && !watchlist.includes(val)) {
-                    const updated = [...watchlist, val];
-                    setWatchlist(updated);
-                    localStorage.setItem('wheel_watchlist', JSON.stringify(updated));
-                    e.target.value = '';
-                  }
-                }
-              }}
-              style={{ 
-                width: 30,
-                minWidth: 30,
-                background: 'rgba(255,255,255,0.04)', 
-                border: '1px solid rgba(255,255,255,0.08)', 
-                borderRadius: 4,
-                padding: '4px 6px',
-                color: '#fff',
-                fontSize: 11,
-                outline: 'none',
-                whiteSpace: 'nowrap',
-              }} 
-            />
           </div>
         </Card>
 
@@ -383,15 +399,73 @@ export default function LivePanel({ bp }) {
               />
             </Card>
 
+            {/* Combined Stock Info */}
             <Card style={{ marginBottom: 16, padding: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
-                {[{ k: 'Open', v: stats.open }, { k: 'High', v: stats.high }, { k: 'Low', v: stats.low }, { k: 'Prev', v: stats.prevClose }, { k: 'Volume', v: (stats.volume / 1000000).toFixed(1) + 'M' }, { k: 'P/E', v: stats.peRatio?.toFixed(1) }].map(x => (
-                  <div key={x.k} style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: 6 }}>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 2 }}>{x.k}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{x.v || '—'}</div>
+              {(() => {
+                const formatShares = (n) => {
+                  if (!n) return '—';
+                  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+                  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+                  return n.toLocaleString();
+                };
+                
+                const earningsDate = stats.earningsDate ? new Date(stats.earningsDate * 1000) : null;
+                const today = new Date();
+                const daysUntilEarnings = earningsDate ? Math.ceil((earningsDate - today) / (1000 * 60 * 60 * 24)) : null;
+                
+                let earningsColor = 'rgba(255,255,255,0.5)';
+                let earningsBg = 'rgba(255,255,255,0.05)';
+                let earningsBorder = 'rgba(255,255,255,0.08)';
+                
+                if (daysUntilEarnings !== null) {
+                  if (daysUntilEarnings <= 14) {
+                    earningsColor = '#ff5050';
+                    earningsBg = 'rgba(255,80,80,0.15)';
+                    earningsBorder = 'rgba(255,80,80,0.3)';
+                  } else if (daysUntilEarnings <= 30) {
+                    earningsColor = '#ff9500';
+                    earningsBg = 'rgba(255,149,0,0.15)';
+                    earningsBorder = 'rgba(255,149,0,0.3)';
+                  } else {
+                    earningsColor = '#00ff88';
+                    earningsBg = 'rgba(0,255,136,0.15)';
+                    earningsBorder = 'rgba(0,255,136,0.3)';
+                  }
+                }
+
+                const stockItems = [
+                  { k: 'Open', v: stats.open },
+                  { k: 'High', v: stats.high },
+                  { k: 'Low', v: stats.low },
+                  { k: 'Prev', v: stats.prevClose },
+                  { k: 'Vol', v: (stats.volume / 1000000).toFixed(1) + 'M' },
+                  { k: 'P/E', v: stats.peRatio?.toFixed(1) },
+                  { k: '52W ↑', v: `$${stats.fiftyTwoWeekHigh?.toFixed(2) || '—'}`, color: '#00ff88' },
+                  { k: '52W ↓', v: `$${stats.fiftyTwoWeekLow?.toFixed(2) || '—'}`, color: '#ff5050' },
+                  { k: 'Shares', v: formatShares(stats.sharesOutstanding) },
+                  { k: 'Float', v: formatShares(stats.floatShares) },
+                  { 
+                    k: 'Earn', 
+                    v: earningsDate ? earningsDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—',
+                    sub: earningsDate ? (daysUntilEarnings > 0 ? `${daysUntilEarnings}d` : 'Today') : null,
+                    bg: earningsBg, 
+                    border: earningsBorder,
+                    color: earningsColor
+                  },
+                ];
+                
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
+                    {stockItems.map(x => (
+                      <div key={x.k} style={{ background: x.bg || 'rgba(0,0,0,0.3)', padding: '12px 14px', borderRadius: 6, border: x.border ? `1px solid ${x.border}` : 'none' }}>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 2 }}>{x.k}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: x.color || '#fff' }}>{x.v || '—'}</div>
+                        {x.sub && <div style={{ fontSize: 10, color: x.color, opacity: 0.8, marginTop: 2 }}>{x.sub}</div>}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </Card>
 
             <div style={{ marginBottom: 20 }}>

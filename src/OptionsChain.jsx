@@ -224,7 +224,7 @@ function ChainRow({ row, maxCallOI, maxPutOI, mode, selected, onSelect, expLabel
             onClick={() => onSelect(row, "call")}
             style={{
               flex:1, display:"flex", alignItems:"center", justifyContent:"flex-end",
-              padding:"10px 8px 6px",
+              padding:"14px 12px 10px",
               background: showCallDetail ? "rgba(0,200,5,0.06)" : callBg,
               cursor:"pointer",
               transition:"background 0.15s",
@@ -233,13 +233,13 @@ function ChainRow({ row, maxCallOI, maxPutOI, mode, selected, onSelect, expLabel
             onMouseEnter={e=>e.currentTarget.style.background="rgba(0,200,5,0.08)"}
             onMouseLeave={e=>e.currentTarget.style.background=showCallDetail?"rgba(0,200,5,0.06)":callBg}
           >
-            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, width:"100%" }}>
-              <div style={{ display:"flex", gap:6, alignItems:"center", justifyContent:"flex-end" }}>
-                <span style={{ ...cols.vol, fontSize:11, color:"rgba(255,255,255,0.3)", fontFamily:"'DM Mono',monospace" }}>{fmtK(row.call.volume)}</span>
-                <span style={{ ...cols.chg, fontSize:11, color:callChangeColor, fontFamily:"'DM Mono',monospace" }}>{row.call.change>=0?"+":""}{fmt2(row.call.change)}</span>
-                <span style={{ ...cols.iv, fontSize:11, color:"rgba(255,255,255,0.35)", fontFamily:"'DM Mono',monospace" }}>{fmtPct(row.call.iv)}</span>
-                <span style={{ ...cols.bid, fontSize:12, color:"rgba(255,255,255,0.5)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.call.bid)}</span>
-                <span style={{ ...cols.ask, fontSize:13, fontWeight:500, color:callITM?"#fff":"rgba(255,255,255,0.65)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.call.ask)}</span>
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, width:"100%" }}>
+              <div style={{ display:"flex", gap:8, alignItems:"center", justifyContent:"flex-end" }}>
+                <span style={{ ...cols.vol, fontSize:12, color:"rgba(255,255,255,0.35)", fontFamily:"'DM Mono',monospace" }}>{fmtK(row.call.volume)}</span>
+                <span style={{ ...cols.chg, fontSize:12, color:callChangeColor, fontFamily:"'DM Mono',monospace" }}>{row.call.change>=0?"+":""}{fmt2(row.call.change)}</span>
+                <span style={{ ...cols.iv, fontSize:12, color:"rgba(255,255,255,0.4)", fontFamily:"'DM Mono',monospace" }}>{fmtPct(row.call.iv)}</span>
+                <span style={{ ...cols.bid, fontSize:13, color:"rgba(255,255,255,0.55)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.call.bid)}</span>
+                <span style={{ ...cols.ask, fontSize:14, fontWeight:500, color:callITM?"#fff":"rgba(255,255,255,0.7)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.call.ask)}</span>
               </div>
               <OIBar value={row.call.oi} max={maxCallOI} color="rgba(0,200,5,0.5)" />
             </div>
@@ -250,22 +250,31 @@ function ChainRow({ row, maxCallOI, maxPutOI, mode, selected, onSelect, expLabel
         <div style={{
           flex:"0 0 72px", display:"flex", flexDirection:"column",
           alignItems:"center", justifyContent:"center",
-          padding:"8px 4px",
+          padding:"12px 4px",
           borderLeft:"1px solid rgba(255,255,255,0.05)",
           borderRight:"1px solid rgba(255,255,255,0.05)",
           background: isATM ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.2)",
         }}>
           <div style={{
-            fontSize:13, fontWeight:isATM?600:400,
+            fontSize:15, fontWeight:isATM?600:400,
             fontFamily:"'DM Mono',monospace",
             color: isATM ? "#fff" : "rgba(255,255,255,0.7)",
             letterSpacing:"-0.02em",
           }}>
             {row.strike}
           </div>
-          {isATM && (
-            <div style={{ fontSize:8, color:"rgba(255,255,255,0.35)", textTransform:"uppercase", letterSpacing:"0.1em", marginTop:1 }}>ATM</div>
-          )}
+          {mode === "both" ? (
+            <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
+              <span style={{ fontSize: 8, color: callITM ? "rgba(0,200,5,0.6)" : "rgba(0,200,5,0.25)", textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {isATM ? 'ATM' : callITM ? 'ITM' : 'OTM'}
+              </span>
+              <span style={{ fontSize: 8, color: putITM ? "rgba(255,80,0,0.6)" : "rgba(255,80,0,0.25)", textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {isATM ? '' : putITM ? 'ITM' : 'OTM'}
+              </span>
+            </div>
+          ) : isATM ? (
+            <div style={{ fontSize:9, color:"rgba(255,255,255,0.4)", textTransform:"uppercase", letterSpacing:"0.1em", marginTop:2 }}>ATM</div>
+          ) : null}
         </div>
 
         {/* ── PUT SIDE ── */}
@@ -274,7 +283,7 @@ function ChainRow({ row, maxCallOI, maxPutOI, mode, selected, onSelect, expLabel
             onClick={() => onSelect(row, "put")}
             style={{
               flex:1, display:"flex", alignItems:"center",
-              padding:"10px 8px 6px",
+              padding:"14px 12px 10px",
               background: showPutDetail ? "rgba(255,80,0,0.06)" : putBg,
               cursor:"pointer",
               transition:"background 0.15s",
@@ -282,13 +291,13 @@ function ChainRow({ row, maxCallOI, maxPutOI, mode, selected, onSelect, expLabel
             onMouseEnter={e=>e.currentTarget.style.background="rgba(255,80,0,0.08)"}
             onMouseLeave={e=>e.currentTarget.style.background=showPutDetail?"rgba(255,80,0,0.06)":putBg}
           >
-            <div style={{ display:"flex", flexDirection:"column", gap:3, width:"100%" }}>
-              <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                <span style={{ ...cols.bid, fontSize:13, fontWeight:500, color:putITM?"#fff":"rgba(255,255,255,0.65)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.put.bid)}</span>
-                <span style={{ ...cols.ask, fontSize:12, color:"rgba(255,255,255,0.5)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.put.ask)}</span>
-                <span style={{ ...cols.iv, fontSize:11, color:"rgba(255,255,255,0.35)", fontFamily:"'DM Mono',monospace" }}>{fmtPct(row.put.iv)}</span>
-                <span style={{ ...cols.chg, fontSize:11, color:putChangeColor, fontFamily:"'DM Mono',monospace" }}>{row.put.change>=0?"+":""}{fmt2(row.put.change)}</span>
-                <span style={{ ...cols.vol, fontSize:11, color:"rgba(255,255,255,0.3)", fontFamily:"'DM Mono',monospace" }}>{fmtK(row.put.volume)}</span>
+            <div style={{ display:"flex", flexDirection:"column", gap:4, width:"100%" }}>
+              <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                <span style={{ ...cols.bid, fontSize:14, fontWeight:500, color:putITM?"#fff":"rgba(255,255,255,0.7)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.put.bid)}</span>
+                <span style={{ ...cols.ask, fontSize:13, color:"rgba(255,255,255,0.55)", fontFamily:"'DM Mono',monospace" }}>{fmt2(row.put.ask)}</span>
+                <span style={{ ...cols.iv, fontSize:12, color:"rgba(255,255,255,0.4)", fontFamily:"'DM Mono',monospace" }}>{fmtPct(row.put.iv)}</span>
+                <span style={{ ...cols.chg, fontSize:12, color:putChangeColor, fontFamily:"'DM Mono',monospace" }}>{row.put.change>=0?"+":""}{fmt2(row.put.change)}</span>
+                <span style={{ ...cols.vol, fontSize:12, color:"rgba(255,255,255,0.35)", fontFamily:"'DM Mono',monospace" }}>{fmtK(row.put.volume)}</span>
               </div>
               <OIBar value={row.put.oi} max={maxPutOI} color="rgba(255,80,0,0.5)" />
             </div>
